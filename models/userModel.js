@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
       message: 'Passwords are not the same!',
     },
   },
-  //   passwordChangedAt: Date,
+  passwordChangedAt: Date,
   //   passwordResetToken: String,
   //   passwordResetExpires: Date,
   active: {
@@ -54,12 +54,26 @@ userSchema.pre('save', async function () {
   // Hash the password with cost of 12
   this.password = await bcrypt.hash(this.password, 12);
 
-  // Delete passwordConfirm field
+  // Delete passwordConfirm field from the DB
   this.passwordConfirm = undefined;
   // next();
 });
 
 //some methods
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+
+    return JWTTimestamp < changedTimestamp;
+  }
+
+  // False means password is NOT changed
+  return false;
+};
+
 userSchema.methods.comparePasswordForLogin = async function (
   candidatePassword,
   userPassword

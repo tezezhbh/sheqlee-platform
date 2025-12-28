@@ -1,10 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const userRouter = require('./routes/userRoute');
-const authRouter = require('./routes/authRouter');
 const AppError = require('./utilities/globalAppError');
 const globalErrorHandler = require('./controllers/errorController');
+const userRouter = require('./routes/userRoute');
+const authRouter = require('./routes/authRouter');
+const companyRouter = require('./routes/companyRouter');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(morgan('dev'));
 // app.use(router);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/companies', companyRouter);
 
 // 404 handler (optional)
 app.use((req, res, next) => {

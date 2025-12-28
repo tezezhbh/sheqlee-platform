@@ -30,3 +30,12 @@ exports.companyRegisterValidator = [
       return true;
     }),
 ];
+
+exports.createCompanyValidator = [
+  body('name').notEmpty().withMessage('Company name is required'),
+
+  body('domain')
+    .optional()
+    .isURL()
+    .withMessage('Company domain must be a valid URL'),
+];

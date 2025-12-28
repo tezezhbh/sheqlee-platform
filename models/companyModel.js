@@ -11,7 +11,7 @@ const companySchema = new mongoose.Schema(
     domain: {
       type: String,
       required: [true, 'A company must have a Domain.'],
-      unique: [true, 'A company Domain must have to unique'],
+      unique: [true, 'A company Domain must have to be unique'],
     },
 
     description: {

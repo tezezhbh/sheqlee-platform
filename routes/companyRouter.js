@@ -1,6 +1,7 @@
 const express = require('express');
 const companyController = require('./../controllers/companyController');
 const authController = require('./../controllers/authController');
+const jobController = require('./../controllers/jobController');
 const { createCompanyValidator } = require('./../validators/comRegValidator');
 const validateRequest = require('../myMiddlewares/validateRequest');
 
@@ -18,6 +19,12 @@ router.get(
   authController.protect,
   authController.authorizedTo('admin'),
   companyController.getCompany
+);
+router.get(
+  '/:companyId/jobs/stats',
+  authController.protect,
+  authController.restrictedToAccountType('employer'),
+  jobController.getCompanyJobStats
 );
 
 router

@@ -6,6 +6,7 @@ const globalErrorHandler = require('./controllers/errorController');
 const userRouter = require('./routes/userRoute');
 const authRouter = require('./routes/authRouter');
 const companyRouter = require('./routes/companyRouter');
+const jobRouter = require('./routes/jobRouter');
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(morgan('dev'));
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/companies', companyRouter);
+app.use('/api/v1/jobs', jobRouter);
 
 // 404 handler (optional)
 app.use((req, res, next) => {

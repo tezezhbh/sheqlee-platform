@@ -5,11 +5,22 @@ const handleDBCastError = (err) => {
   return new AppError(message, 400);
 };
 
-const handleDBDuplicateFields = (err) => {
-  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
-  console.log(value);
+// OLDER VERSION
+// const handleDBDuplicateFields = (err) => {
+//   const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+//   console.log(value);
 
-  const message = `Duplicate field value: ${value}. Please use another value!`;
+//   const message = `Duplicate field value: ${value}. Please use another value!`;
+//   return new AppError(message, 400);
+// };
+
+// NEW VERSION
+const handleDBDuplicateFields = (err) => {
+  const field = Object.keys(err.keyValue)[0];
+  const value = err.keyValue[field];
+
+  const message = `Duplicate value for ${field}: "${value}". Please use another value.`;
+
   return new AppError(message, 400);
 };
 

@@ -135,3 +135,12 @@ exports.authorizedTo = (...roles) => {
     next();
   };
 };
+
+exports.restrictedToAccountType = (...types) => {
+  return (req, res, next) => {
+    if (!types.includes(req.user.account_type)) {
+      return next(new AppError('This action is not allowed for you.', 403));
+    }
+    next();
+  };
+};

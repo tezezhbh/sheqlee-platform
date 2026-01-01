@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const JobPost = require('../models/jobModel');
 const Company = require('../models/companyModel');
+// const JobApplication = require('./../models/jobApplicationModel');
 const AppError = require('../utilities/globalAppError');
 const catchAsync = require('../utilities/catchAsync');
 
@@ -21,7 +22,7 @@ const checkCompanyOwnership = async (companyId, userId) => {
     throw new AppError('Company not found', 404);
   }
 
-  if (company.owner_id.toString() !== userId.toString()) {
+  if (company.owner.toString() !== userId.toString()) {
     throw new AppError('You are not allowed to perform this action', 403);
   }
 
@@ -30,21 +31,21 @@ const checkCompanyOwnership = async (companyId, userId) => {
 
 exports.createJob = catchAsync(async (req, res, next) => {
   const {
-    company_id,
+    company,
     title,
     description,
     location,
-    employment_type,
-    experience_level,
+    employmentType,
+    experienceLevel,
     tags,
   } = req.body;
 
-  await checkCompanyOwnership(company_id, req.user._id);
+  await checkCompanyOwnership(company, req.user._id);
 
   const existingJob = await JobPost.findOne({
-    company_id,
+    company,
     title,
-    is_active: true,
+    isActive: true,
   });
 
   // preventing duplicate Job Post
@@ -56,13 +57,13 @@ exports.createJob = catchAsync(async (req, res, next) => {
 
   // 3️) Create job
   const job = await JobPost.create({
-    company_id,
-    created_by: req.user._id,
+    company,
+    createdBy: req.user._id,
     title,
     description,
     location,
-    employment_type,
-    experience_level,
+    employmentType,
+    experienceLevel,
     tags,
   });
 
@@ -77,8 +78,8 @@ exports.createJob = catchAsync(async (req, res, next) => {
 
 exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
   const jobs = await JobPost.find({
-    is_published: true,
-    is_active: true,
+    isPublished: true,
+    isActive: true,
   })
     .populate('company_id', 'name domain')
     .sort({ createdAt: -1 });
@@ -100,8 +101,8 @@ exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
 exports.getOneJob = catchAsync(async (req, res, next) => {
   const job = await JobPost.findOne({
     _id: req.params.jobId,
-    is_active: true,
-    is_published: true,
+    isActive: true,
+    isPublished: true,
   }).populate('company_id', 'name domain');
 
   if (!job) {
@@ -125,8 +126,8 @@ exports.getCompanyJobStats = catchAsync(async (req, res, next) => {
     // { $match: { company_id: companyId } },
     {
       $match: {
-        company_id: new mongoose.Types.ObjectId(companyId),
-        is_active: true,
+        company: new mongoose.Types.ObjectId(companyId),
+        isActive: true,
       },
     },
     {
@@ -161,9 +162,9 @@ exports.getCompanyJobs = catchAsync(async (req, res, next) => {
   const { companyId } = req.params;
 
   const jobs = await JobPost.find({
-    company_id: companyId,
-    is_published: true,
-    is_active: true,
+    company: companyId,
+    isPublished: true,
+    isActive: true,
   })
     .populate('company_id', 'name domain')
     .sort({ createdAt: -1 });
@@ -185,8 +186,8 @@ exports.getMyCompanyJobs = catchAsync(async (req, res, next) => {
 
   // 3) Get jobs
   const jobs = await JobPost.find({
-    company_id: companyId,
-    is_active: true,
+    company: companyId,
+    isActive: true,
   }).sort({ createdAt: -1 });
 
   res.status(200).json({
@@ -202,10 +203,10 @@ exports.publishJob = catchAsync(async (req, res, next) => {
   const { jobId } = req.params;
 
   const job = await getJobOrFail(req.params.jobId);
-  await checkCompanyOwnership(job.company_id, req.user._id);
+  await checkCompanyOwnership(job.company, req.user._id);
 
   // 4) Publish
-  job.is_published = true;
+  job.isPublished = true;
   await job.save();
 
   res.status(200).json({
@@ -221,9 +222,9 @@ exports.unpublishJob = catchAsync(async (req, res, next) => {
   const { jobId } = req.params;
 
   const job = await getJobOrFail(req.params.jobId);
-  await checkCompanyOwnership(job.company_id, req.user._id);
+  await checkCompanyOwnership(job.company, req.user._id);
 
-  job.is_published = false;
+  job.isPublished = false;
   await job.save();
 
   res.status(200).json({
@@ -239,7 +240,7 @@ exports.updateJob = catchAsync(async (req, res, next) => {
   const { jobId } = req.params;
 
   const job = await getJobOrFail(req.params.jobId);
-  await checkCompanyOwnership(job.company_id, req.user._id);
+  await checkCompanyOwnership(job.company, req.user._id);
 
   const allowedFields = [
     'title',
@@ -271,10 +272,10 @@ exports.deleteJob = catchAsync(async (req, res, next) => {
   const { jobId } = req.params;
 
   const job = await getJobOrFail(req.params.jobId);
-  await checkCompanyOwnership(job.company_id, req.user._id);
+  await checkCompanyOwnership(job.company, req.user._id);
 
-  job.is_active = false;
-  job.is_published = false;
+  job.isActive = false;
+  job.isPublished = false;
   await job.save();
 
   res.status(200).json({

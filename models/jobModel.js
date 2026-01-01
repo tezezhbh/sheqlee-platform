@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 
 const jobPostSchema = new mongoose.Schema(
   {
-    company_id: {
+    company: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Company',
       required: true,
     },
-    created_by: {
+    createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
@@ -24,12 +24,12 @@ const jobPostSchema = new mongoose.Schema(
     location: {
       type: String,
     },
-    employment_type: {
+    employmentType: {
       type: String,
       enum: ['full_time', 'part_time', 'contract', 'remote'],
       required: true,
     },
-    experience_level: {
+    experienceLevel: {
       type: String,
       enum: ['junior', 'mid', 'senior'],
     },
@@ -43,11 +43,11 @@ const jobPostSchema = new mongoose.Schema(
       type: String,
       enum: ['draft', 'published', 'closed'],
     },
-    is_published: {
+    isPublished: {
       type: Boolean,
       default: false,
     },
-    is_active: {
+    isActive: {
       type: Boolean,
       default: true,
     },
@@ -55,10 +55,7 @@ const jobPostSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-jobPostSchema.index(
-  { company_id: 1, title: 1, is_active: 1 },
-  { unique: true }
-);
+jobPostSchema.index({ company: 1, title: 1, isActive: 1 }, { unique: true });
 
 const JobPost = mongoose.model('JobPost', jobPostSchema);
 

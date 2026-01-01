@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin', 'super-admin'],
     default: 'user',
   },
-  account_type: {
+  accountType: {
     type: String,
     enum: ['professional', 'employer'],
     required: function () {

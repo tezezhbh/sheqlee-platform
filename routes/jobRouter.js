@@ -1,11 +1,13 @@
 const express = require('express');
-const router = express.Router();
 
 const authController = require('./../controllers/authController');
 // const auth = require('../middlewares/auth');
 const jobController = require('./../controllers/jobController');
+const jobApplicationController = require('./../controllers/jobApplicationController');
 const { createJobValidator } = require('../validators/jobValidator');
 const validateRequest = require('./../myMiddlewares/validateRequest');
+
+const router = express.Router();
 
 router.get(
   '/company/:companyId/my',
@@ -43,5 +45,17 @@ router
     jobController.createJob
   )
   .get(jobController.getAllPublishedJobs);
+
+router.post(
+  '/:jobId/apply',
+  authController.protect,
+  jobApplicationController.applyToJob
+);
+router.get(
+  '/:jobId/applications',
+  authController.protect,
+  // authController.restrictedToAccountType('employer'),
+  jobApplicationController.getJobApplications
+);
 
 module.exports = router;

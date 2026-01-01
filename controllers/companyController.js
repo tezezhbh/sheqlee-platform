@@ -36,21 +36,21 @@ exports.companyRegister = catchAsync(async (req, res, next) => {
     password: representative.password,
     // passwordConfirm: representative.passwordConfirm,
     role: 'user',
-    account_type: 'employer',
+    accountType: 'employer',
   });
 
   const newCompany = await Company.create({
     name: company.name,
     domain: company.domain,
-    owner_id: user._id,
+    owner: user._id,
   });
 
   return res.status(201).json({
     success: true,
     message: 'Company registered successfully',
     data: {
-      owner_id: user._id,
-      company_id: newCompany._id,
+      owner: user._id,
+      company: newCompany._id,
     },
   });
 });
@@ -61,7 +61,7 @@ exports.createCompany = catchAsync(async (req, res, next) => {
   // Optional: prevent duplicate company names per user
   const existingCompany = await Company.findOne({
     name,
-    owner_id: req.user._id,
+    owner: req.user._id,
   });
 
   if (existingCompany) {
@@ -71,7 +71,7 @@ exports.createCompany = catchAsync(async (req, res, next) => {
   const company = await Company.create({
     name,
     domain,
-    owner_id: req.user._id,
+    owner: req.user._id,
   });
 
   res.status(201).json({
@@ -118,7 +118,7 @@ exports.getCompany = catchAsync(async (req, res, next) => {
 
 exports.getMyCompanyProfile = catchAsync(async (req, res, next) => {
   const company = await Company.find({
-    owner_id: req.user._id,
+    owner: req.user._id,
   });
 
   // only for one findOne()
@@ -140,7 +140,7 @@ exports.getMyCompanyProfile = catchAsync(async (req, res, next) => {
 
 exports.updateMyCompanyProfile = catchAsync(async (req, res, next) => {
   const updatedCompany = await Company.findOneAndUpdate(
-    { owner_id: req.user._id },
+    { owner: req.user._id },
     req.body,
     { new: true, runValidators: true }
   );

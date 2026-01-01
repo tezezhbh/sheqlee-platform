@@ -26,11 +26,11 @@ const companySchema = new mongoose.Schema(
       type: String,
     },
 
-    logo_url: {
+    logoUrl: {
       type: String,
     },
 
-    owner_id: {
+    owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,

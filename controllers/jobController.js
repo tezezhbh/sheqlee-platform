@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const JobPost = require('../models/jobModel');
 const Company = require('../models/companyModel');
+const JobCategory = require('./../models/jobCategoryModel');
 // const JobApplication = require('./../models/jobApplicationModel');
 const AppError = require('../utilities/globalAppError');
 const catchAsync = require('../utilities/catchAsync');
@@ -22,6 +23,10 @@ const checkCompanyOwnership = async (companyId, userId) => {
     throw new AppError('Company not found', 404);
   }
 
+  if (!company.owner) {
+    throw new AppError('There is no Company owner!', 500);
+  }
+
   if (company.owner.toString() !== userId.toString()) {
     throw new AppError('You are not allowed to perform this action', 403);
   }
@@ -38,6 +43,7 @@ exports.createJob = catchAsync(async (req, res, next) => {
     employmentType,
     experienceLevel,
     tags,
+    category,
   } = req.body;
 
   await checkCompanyOwnership(company, req.user._id);
@@ -55,6 +61,16 @@ exports.createJob = catchAsync(async (req, res, next) => {
     );
   }
 
+  // Check if Category exists
+  const categoryExists = await JobCategory.findOne({
+    _id: category,
+    isActive: true,
+  });
+
+  if (!categoryExists) {
+    return next(new AppError('Invalid or inactive job category', 400));
+  }
+
   // 3️) Create job
   const job = await JobPost.create({
     company,
@@ -65,6 +81,7 @@ exports.createJob = catchAsync(async (req, res, next) => {
     employmentType,
     experienceLevel,
     tags,
+    category,
   });
 
   res.status(201).json({
@@ -77,17 +94,35 @@ exports.createJob = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
-  const jobs = await JobPost.find({
+  const query = {
     isPublished: true,
     isActive: true,
-  })
-    .populate('company_id', 'name domain')
-    .sort({ createdAt: -1 });
+  };
 
-  // Paginations
+  // Category filter
+  if (req.query.category) {
+    const category = await JobCategory.findOne({
+      slug: req.query.category,
+      isActive: true,
+    });
+
+    if (!category) {
+      return next(new AppError('Category not found', 404));
+    }
+
+    query.category = category._id;
+  }
+
+  // Pagination
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
+
+  const jobs = await JobPost.find(query)
+    .populate('company', 'name domain')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
 
   res.status(200).json({
     status: 'success',
@@ -103,7 +138,7 @@ exports.getOneJob = catchAsync(async (req, res, next) => {
     _id: req.params.jobId,
     isActive: true,
     isPublished: true,
-  }).populate('company_id', 'name domain');
+  }).populate('company', 'name domain');
 
   if (!job) {
     return next(new AppError('Job not found', 404));
@@ -135,10 +170,10 @@ exports.getCompanyJobStats = catchAsync(async (req, res, next) => {
         _id: null,
         total: { $sum: 1 },
         published: {
-          $sum: { $cond: ['$is_published', 1, 0] },
+          $sum: { $cond: ['$isPublished', 1, 0] },
         },
         active: {
-          $sum: { $cond: ['$is_active', 1, 0] },
+          $sum: { $cond: ['$isActive', 1, 0] },
         },
       },
     },
@@ -166,7 +201,7 @@ exports.getCompanyJobs = catchAsync(async (req, res, next) => {
     isPublished: true,
     isActive: true,
   })
-    .populate('company_id', 'name domain')
+    .populate('company', 'name domain')
     .sort({ createdAt: -1 });
 
   res.status(200).json({

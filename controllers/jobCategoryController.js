@@ -73,9 +73,11 @@ exports.toggleCategoryStatus = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllCategories = catchAsync(async (req, res, next) => {
-  const categories = await JobCategory.find({ isActive: true }).sort({
-    name: 1,
-  });
+  const categories = await JobCategory.find({ isActive: true })
+    .select('name slug description')
+    .sort({
+      name: 1,
+    });
 
   res.status(200).json({
     status: 'success',

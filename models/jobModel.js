@@ -39,6 +39,12 @@ const jobPostSchema = new mongoose.Schema(
         ref: 'Tag',
       },
     ],
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'JobCategory',
+      required: [true, 'Job category is required'],
+    },
+
     status: {
       type: String,
       enum: ['draft', 'published', 'closed'],

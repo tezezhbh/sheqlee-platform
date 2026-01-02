@@ -28,7 +28,7 @@ const jobCategorySchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: [true, 'A Category must have a creater'],
     },
   },
   { timestamps: true }

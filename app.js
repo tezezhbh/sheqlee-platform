@@ -3,12 +3,13 @@ const cors = require('cors');
 const morgan = require('morgan');
 const AppError = require('./utilities/globalAppError');
 const globalErrorHandler = require('./controllers/errorController');
-const userRouter = require('./routes/userRoute');
-const authRouter = require('./routes/authRouter');
-const companyRouter = require('./routes/companyRouter');
-const jobRouter = require('./routes/jobRouter');
-const jobAppllicationRouter = require('./routes/jobApplicationRouter');
-const dashboardRouter = require('./routes/dashboardRouter');
+const userRouter = require('./routes/userRoutes');
+const authRouter = require('./routes/authRoutes');
+const companyRouter = require('./routes/companyRoutes');
+const jobRouter = require('./routes/jobRoutes');
+const jobAppllicationRouter = require('./routes/jobApplicationRoutes');
+const dashboardRouter = require('./routes/dashboardRoutes');
+const jobCategoryRouter = require('./routes/jobCategoryRoutes');
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/api/v1/companies', companyRouter);
 app.use('/api/v1/jobs', jobRouter);
 app.use('/api/v1/applications', jobAppllicationRouter);
 app.use('/api/v1/dashboards', dashboardRouter);
+app.use('/api/v1/categories', jobCategoryRouter);
 
 // 404 handler (optional)
 app.use((req, res, next) => {

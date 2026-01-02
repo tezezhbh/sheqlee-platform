@@ -1,8 +1,8 @@
 const express = require('express');
-const companyController = require('./../controllers/companyController');
-const authController = require('./../controllers/authController');
-const jobController = require('./../controllers/jobController');
-const { createCompanyValidator } = require('./../validators/comRegValidator');
+const companyController = require('../controllers/companyController');
+const authController = require('../controllers/authController');
+const jobController = require('../controllers/jobController');
+const { createCompanyValidator } = require('../validators/comRegValidator');
 const validateRequest = require('../myMiddlewares/validateRequest');
 
 // const auth = require('../middlewares/auth');

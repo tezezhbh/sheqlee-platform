@@ -1,5 +1,5 @@
 const express = require('express');
-const companyController = require('./../controllers/companyController');
+const companyController = require('../controllers/companyController');
 const { companyRegisterValidator } = require('../validators/comRegValidator');
 const validateRequest = require('../myMiddlewares/validateRequest');
 

@@ -1,11 +1,11 @@
 const express = require('express');
 
-const authController = require('./../controllers/authController');
+const authController = require('../controllers/authController');
 // const auth = require('../middlewares/auth');
-const jobController = require('./../controllers/jobController');
-const jobApplicationController = require('./../controllers/jobApplicationController');
+const jobController = require('../controllers/jobController');
+const jobApplicationController = require('../controllers/jobApplicationController');
 const { createJobValidator } = require('../validators/jobValidator');
-const validateRequest = require('./../myMiddlewares/validateRequest');
+const validateRequest = require('../myMiddlewares/validateRequest');
 
 const router = express.Router();
 

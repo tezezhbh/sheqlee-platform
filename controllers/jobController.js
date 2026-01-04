@@ -99,6 +99,11 @@ exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
     isActive: true,
   };
 
+  // Keyword search
+  if (req.query.search) {
+    query.$text = { $search: req.query.search };
+  }
+
   // Category filter
   if (req.query.category) {
     const category = await JobCategory.findOne({
@@ -113,13 +118,34 @@ exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
     query.category = category._id;
   }
 
+  //Filter by Tags
+  if (req.query.tags) {
+    const tagSlugs = req.query.tags
+      .split(',')
+      .map((t) => t.trim().toLowerCase());
+
+    const tags = await Tag.find({
+      slug: { $in: tagSlugs },
+      isActive: true,
+    });
+
+    if (!tags.length) {
+      return next(new AppError('No matching tags found', 404));
+    }
+
+    query.tags = { $in: tags.map((tag) => tag._id) };
+  }
+
   // Pagination
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
+  const total = await JobPost.countDocuments(query);
+
   const jobs = await JobPost.find(query)
     .populate('company', 'name domain')
+    .populate('tags', 'name slug')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
@@ -127,6 +153,7 @@ exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     results: jobs.length,
+    total,
     data: {
       jobs,
     },

@@ -62,6 +62,10 @@ const jobPostSchema = new mongoose.Schema(
 );
 
 jobPostSchema.index({ company: 1, title: 1, isActive: 1 }, { unique: true });
+jobPostSchema.index({
+  title: 'text',
+  description: 'text',
+});
 
 const JobPost = mongoose.model('JobPost', jobPostSchema);
 

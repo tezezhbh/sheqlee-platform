@@ -10,6 +10,7 @@ const jobRouter = require('./routes/jobRoutes');
 const jobAppllicationRouter = require('./routes/jobApplicationRoutes');
 const dashboardRouter = require('./routes/dashboardRoutes');
 const jobCategoryRouter = require('./routes/jobCategoryRoutes');
+const tagRouter = require('./routes/tagRoutes');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/v1/jobs', jobRouter);
 app.use('/api/v1/applications', jobAppllicationRouter);
 app.use('/api/v1/dashboards', dashboardRouter);
 app.use('/api/v1/categories', jobCategoryRouter);
+app.use('/api/v1/tags', tagRouter);
 
 // 404 handler (optional)
 app.use((req, res, next) => {

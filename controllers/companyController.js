@@ -85,7 +85,7 @@ exports.createCompany = catchAsync(async (req, res, next) => {
 
 exports.getAllCompanies = catchAsync(async (req, res, next) => {
   const companies = await Company.find()
-    .populate('owner_id', 'name email')
+    .populate('owner', 'name email')
     .sort({ createdAt: -1 });
 
   res.status(200).json({
@@ -99,7 +99,7 @@ exports.getAllCompanies = catchAsync(async (req, res, next) => {
 
 exports.getCompany = catchAsync(async (req, res, next) => {
   const company = await Company.findById(req.params.companyId).populate(
-    'owner_id',
+    'owner',
     'name email'
   );
 

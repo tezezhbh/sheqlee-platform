@@ -17,6 +17,9 @@ const jobPostSchema = new mongoose.Schema(
       required: [true, 'A Job must have a Title.'],
       trim: true,
     },
+    shortDescription: {
+      type: String,
+    },
     description: {
       type: String,
       required: [true, 'A Job must have a description.'],
@@ -26,12 +29,12 @@ const jobPostSchema = new mongoose.Schema(
     },
     employmentType: {
       type: String,
-      enum: ['full_time', 'part_time', 'contract', 'internship', 'freelance'],
+      enum: ['full_time', 'part_time', 'contract', 'per-diem', 'temporary'],
       required: true,
     },
     experienceLevel: {
       type: String,
-      enum: ['junior', 'mid', 'senior', 'expert'],
+      enum: ['beginner', 'intermediate', 'senior', 'expert'],
     },
     tags: [
       {

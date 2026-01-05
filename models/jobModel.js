@@ -26,12 +26,12 @@ const jobPostSchema = new mongoose.Schema(
     },
     employmentType: {
       type: String,
-      enum: ['full_time', 'part_time', 'contract', 'remote'],
+      enum: ['full_time', 'part_time', 'contract', 'internship', 'freelance'],
       required: true,
     },
     experienceLevel: {
       type: String,
-      enum: ['junior', 'mid', 'senior'],
+      enum: ['junior', 'mid', 'senior', 'expert'],
     },
     tags: [
       {
@@ -44,7 +44,22 @@ const jobPostSchema = new mongoose.Schema(
       ref: 'JobCategory',
       required: [true, 'Job category is required'],
     },
-
+    requirements: {
+      type: String,
+      required: true,
+    },
+    salary: {
+      min: Number,
+      max: Number,
+      currency: {
+        type: String,
+        default: 'ETB',
+      },
+      unit: {
+        type: String,
+        enum: ['hour', 'month', 'year'],
+      },
+    },
     status: {
       type: String,
       enum: ['draft', 'published', 'closed'],

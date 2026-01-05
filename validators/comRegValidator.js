@@ -39,3 +39,13 @@ exports.createCompanyValidator = [
     .isURL()
     .withMessage('Company domain must be a valid URL'),
 ];
+
+exports.signupValidator = [
+  body('password')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters'),
+
+  body('passwordConfirm')
+    .custom((value, { req }) => value === req.body.password)
+    .withMessage('Passwords do not match'),
+];

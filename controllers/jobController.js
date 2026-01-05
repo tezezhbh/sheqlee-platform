@@ -165,7 +165,9 @@ exports.getOneJob = catchAsync(async (req, res, next) => {
     _id: req.params.jobId,
     isActive: true,
     isPublished: true,
-  }).populate('company', 'name domain');
+  })
+    .populate('company', 'name domain')
+    .populate('tags', 'name slug');
 
   if (!job) {
     return next(new AppError('Job not found', 404));

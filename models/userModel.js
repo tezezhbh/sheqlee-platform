@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema({
   accountType: {
     type: String,
     enum: ['professional', 'employer'],
+    default: 'professional',
     required: function () {
       return this.role === 'user';
     },
@@ -47,6 +48,32 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
   //   passwordResetToken: String,
   //   passwordResetExpires: Date,
+  skills: [
+    {
+      name: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      level: {
+        type: String,
+        enum: ['beginner', 'intermediate', 'advanced'],
+        required: true,
+      },
+    },
+  ],
+  links: [
+    {
+      name: {
+        type: String,
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
   active: {
     type: Boolean,
     default: true,

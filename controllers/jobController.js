@@ -44,6 +44,8 @@ exports.createJob = catchAsync(async (req, res, next) => {
     experienceLevel,
     tags,
     category,
+    requirements,
+    salary,
   } = req.body;
 
   await checkCompanyOwnership(company, req.user._id);
@@ -82,6 +84,8 @@ exports.createJob = catchAsync(async (req, res, next) => {
     experienceLevel,
     tags,
     category,
+    requirements,
+    salary,
   });
 
   res.status(201).json({
@@ -118,15 +122,21 @@ exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
     query.category = category._id;
   }
 
-  //Filter by Tags
+  // Filter by Tags
   if (req.query.tags) {
-    const tagSlugs = req.query.tags
-      .split(',')
-      .map((t) => t.trim().toLowerCase());
+    const rawTags = req.query.tags.split(',').map((t) => t.trim());
+
+    const objectIds = rawTags.filter((id) =>
+      mongoose.Types.ObjectId.isValid(id)
+    );
+
+    const slugs = rawTags
+      .filter((t) => !mongoose.Types.ObjectId.isValid(t))
+      .map((t) => t.toLowerCase());
 
     const tags = await Tag.find({
-      slug: { $in: tagSlugs },
       isActive: true,
+      $or: [{ _id: { $in: objectIds } }, { slug: { $in: slugs } }],
     });
 
     if (!tags.length) {
@@ -135,6 +145,7 @@ exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
 
     query.tags = { $in: tags.map((tag) => tag._id) };
   }
+  console.log('Incoming tags:', req.query.tags);
 
   // Pagination
   const page = Number(req.query.page) || 1;
@@ -146,6 +157,7 @@ exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
   const jobs = await JobPost.find(query)
     .populate('company', 'name domain')
     .populate('tags', 'name slug')
+    // .populate('category', 'name slug')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);

@@ -4,6 +4,8 @@ const { promisify } = require('util');
 const User = require('./../models/userModel');
 const catchAsync = require('./../utilities/catchAsync');
 const AppError = require('./../utilities/globalAppError');
+const sendEmail = require('./../utilities/emails/sendEmail');
+const { hashToken } = require('./../utilities/token');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -42,7 +44,29 @@ exports.signup = catchAsync(async (req, res, next) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
   });
+
   console.log(newUser);
+  /*
+  // if email verification is needed
+  const verificationToken = createToken();
+  
+  newUser.emailVerificationToken = hashToken(verificationToken);
+  newUser.emailVerificationExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+  
+  await newUser.save({ validateBeforeSave: false });
+  
+  const verifyURL = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
+  await sendEmail({
+    to: newUser.email,
+    subject: 'Verify your email',
+    template: 'verifyEmail',
+    data: {
+      name: newUser.name,
+      verifyURL,
+    },
+  });
+  */
 
   createSendToken(newUser, 201, res);
 });
@@ -144,3 +168,151 @@ exports.restrictedToAccountType = (...types) => {
     next();
   };
 };
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+
+  // 1) Find user
+  const user = await User.findOne({ email });
+  if (!user) {
+    return next(new AppError('No user with this email', 404));
+  }
+
+  // 2) Generate token
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  // 3) Create reset URL
+  const resetURL = `${req.protocol}://${req.get(
+    'host'
+  )}/api/v1/auth/reset-password/${resetToken}`;
+
+  // 4) Send email
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'Password Reset',
+      html: `
+        <p>You requested a password reset.</p>
+        <p>Click the link below:</p>
+        <a href="${resetURL}">${resetURL}</a>
+        <p>This link expires in 10 minutes.</p>
+      `,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Password reset link sent to email',
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return next(
+      new AppError('There was an error sending the email. Try again later!'),
+      500
+    );
+  }
+});
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  // 1) Hash token
+  const hashedToken = hashToken(token);
+
+  // 2) Find user
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError('Token is invalid or expired', 400));
+  }
+
+  // 3) Update password
+  user.password = password;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  await user.save();
+
+  createSendToken(user, 200, res);
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // 1) Get user from collection
+  const user = await User.findById(req.user.id).select('+password');
+
+  // 2) Check if POSTed current password is correct
+  if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+    return next(new AppError('Your current password is wrong.', 401));
+  }
+
+  // 3) If so, update password
+  user.password = req.body.password;
+  await user.save();
+  // user.passwordConfirm = req.body.passwordConfirm;
+  // User.findByIdAndUpdate will NOT work as intended!
+
+  // 4) Log user in, send JWT
+  createSendToken(user, 200, res);
+});
+
+exports.acceptInvite = catchAsync(async (req, res, next) => {
+  const { token } = req.params;
+  const { name, password } = req.body;
+
+  const hashedToken = hashToken(token);
+
+  const user = await User.findOne({
+    inviteToken: hashedToken,
+    inviteExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError('Invite is invalid or expired', 400));
+  }
+
+  user.name = name;
+  user.password = password;
+  user.inviteToken = undefined;
+  user.inviteExpires = undefined;
+  user.isInvited = false;
+  user.active = true;
+
+  await user.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Account activated successfully',
+    token: createSendToken(user, 200, res),
+  });
+});
+
+exports.verifyEmail = catchAsync(async (req, res, next) => {
+  const hashedToken = hashToken(req.params.token);
+
+  const user = await User.findOne({
+    emailVerificationToken: hashedToken,
+    emailVerificationExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError('Token is invalid or expired', 400));
+  }
+
+  user.emailVerified = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpires = undefined;
+
+  await user.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Email verified successfully',
+  });
+});

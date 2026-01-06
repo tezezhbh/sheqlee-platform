@@ -13,6 +13,7 @@ const jobCategoryRouter = require('./routes/jobCategoryRoutes');
 const tagRouter = require('./routes/tagRoutes');
 const adminRouter = require('./routes/adminRoutes');
 const emailTestRouter = require('./routes/emailTestRoutes');
+const notificationRouter = require('./routes/notificationRoutes');
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use('/api/v1/categories', jobCategoryRouter);
 app.use('/api/v1/tags', tagRouter);
 app.use('/api/v1/emails', emailTestRouter);
 app.use('/api/v1/admins', adminRouter);
+app.use('/api/v1/notifications', notificationRouter);
 
 // 404 handler (optional)
 app.use((req, res, next) => {

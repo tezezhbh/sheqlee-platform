@@ -11,4 +11,11 @@ router.get(
   dashboardController.getEmployerDashboardStats
 );
 
+router.use(authController.protect, authController.authorizedTo('admin'));
+
+router.get('/jobs', dashboardController.getJobStats);
+router.get('/companies', dashboardController.getCompanyStats);
+router.get('/freelancers', dashboardController.getFreelancerStats);
+router.get('/email-alerts', dashboardController.getJobAlertStats);
+
 module.exports = router;

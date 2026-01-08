@@ -1,5 +1,8 @@
 const JobPost = require('../models/jobModel');
 const JobApplication = require('../models/jobApplicationModel');
+const Company = require('../models/companyModel');
+const User = require('../models/userModel');
+const Notification = require('../models/notificationModel'); // or JobAlert model
 const catchAsync = require('../utilities/catchAsync');
 
 exports.getEmployerDashboardStats = catchAsync(async (req, res, next) => {
@@ -68,6 +71,233 @@ exports.getEmployerDashboardStats = catchAsync(async (req, res, next) => {
         published: publishedJobs,
       },
       applications: applicationSummary,
+    },
+  });
+});
+
+//Utility: build date range
+const getDateRange = ({ year, month }) => {
+  if (!year) return {};
+
+  if (month) {
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 1);
+    return { $gte: start, $lt: end };
+  }
+
+  const start = new Date(year, 0, 1);
+  const end = new Date(year + 1, 0, 1);
+  return { $gte: start, $lt: end };
+};
+
+// Utility: current year/month ranges
+const getCurrentRanges = () => {
+  const now = new Date();
+
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  return { yearStart, monthStart, now };
+};
+
+// JOB POSTS STATS
+exports.getJobStats = catchAsync(async (req, res) => {
+  const { year, month } = req.query;
+  const { yearStart, monthStart, now } = getCurrentRanges();
+
+  const total = await JobPost.countDocuments();
+
+  const byYear = year
+    ? await JobPost.countDocuments({
+        createdAt: getDateRange({ year: Number(year) }),
+      })
+    : 0;
+
+  const byMonth =
+    year && month
+      ? await JobPost.countDocuments({
+          createdAt: getDateRange({
+            year: Number(year),
+            month: Number(month),
+          }),
+        })
+      : 0;
+
+  const thisYear = await JobPost.countDocuments({
+    createdAt: {
+      $gte: yearStart,
+      $lte: now,
+    },
+  });
+
+  const thisMonth = await JobPost.countDocuments({
+    createdAt: {
+      $gte: monthStart,
+      $lte: now,
+    },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      total,
+      byYear,
+      byMonth,
+      thisYear,
+      thisMonth,
+    },
+  });
+});
+
+//  COMPANIES STATS
+exports.getCompanyStats = catchAsync(async (req, res) => {
+  const { year, month } = req.query;
+  const { yearStart, monthStart, now } = getCurrentRanges();
+
+  const total = await Company.countDocuments();
+
+  const byYear = year
+    ? await Company.countDocuments({
+        createdAt: getDateRange({ year: Number(year) }),
+      })
+    : 0;
+
+  const byMonth =
+    year && month
+      ? await Company.countDocuments({
+          createdAt: getDateRange({
+            year: Number(year),
+            month: Number(month),
+          }),
+        })
+      : 0;
+
+  const thisYear = await Company.countDocuments({
+    createdAt: {
+      $gte: yearStart,
+      $lte: now,
+    },
+  });
+
+  const thisMonth = await Company.countDocuments({
+    createdAt: {
+      $gte: monthStart,
+      $lte: now,
+    },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      total,
+      byYear,
+      byMonth,
+      thisYear,
+      thisMonth,
+    },
+  });
+});
+
+// FREELANCERS STATS
+exports.getFreelancerStats = catchAsync(async (req, res) => {
+  const { year, month } = req.query;
+  const { yearStart, monthStart, now } = getCurrentRanges();
+
+  const filter = { accountType: 'professional' };
+
+  const total = await User.countDocuments(filter);
+
+  const byYear = year
+    ? await User.countDocuments({
+        ...filter,
+        createdAt: getDateRange({ year: Number(year) }),
+      })
+    : 0;
+
+  const byMonth =
+    year && month
+      ? await User.countDocuments({
+          ...filter,
+          createdAt: getDateRange({
+            year: Number(year),
+            month: Number(month),
+          }),
+        })
+      : 0;
+
+  const thisYear = await User.countDocuments({
+    ...filter,
+    createdAt: {
+      $gte: yearStart,
+      $lte: now,
+    },
+  });
+
+  const thisMonth = await User.countDocuments({
+    ...filter,
+    createdAt: {
+      $gte: monthStart,
+      $lte: now,
+    },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      total,
+      byYear,
+      byMonth,
+      thisYear,
+      thisMonth,
+    },
+  });
+});
+
+// JOB ALERTS STATS
+exports.getJobAlertStats = catchAsync(async (req, res) => {
+  const { year, month } = req.query;
+  const { yearStart, monthStart, now } = getCurrentRanges();
+
+  const total = await Notification.countDocuments();
+
+  const byYear = year
+    ? await Notification.countDocuments({
+        createdAt: getDateRange({ year: Number(year) }),
+      })
+    : 0;
+
+  const byMonth =
+    year && month
+      ? await Notification.countDocuments({
+          createdAt: getDateRange({
+            year: Number(year),
+            month: Number(month),
+          }),
+        })
+      : 0;
+
+  const thisYear = await Notification.countDocuments({
+    createdAt: {
+      $gte: yearStart,
+      $lte: now,
+    },
+  });
+
+  const thisMonth = await Notification.countDocuments({
+    createdAt: {
+      $gte: monthStart,
+      $lte: now,
+    },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      total,
+      byYear,
+      byMonth,
+      thisYear,
+      thisMonth,
     },
   });
 });

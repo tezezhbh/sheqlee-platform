@@ -3,97 +3,100 @@ const bcrypt = require('bcrypt');
 const validator = require('validator');
 const { createToken, hashToken } = require('../utilities/token');
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please tell us your name!'],
-  },
-  email: {
-    type: String,
-    required: [true, 'Please provide your email'],
-    unique: true,
-    lowercase: true,
-    validate: [validator.isEmail, 'Please provide a valid email'],
-  },
-  //   photo: String,
-  role: {
-    type: String,
-    enum: ['user', 'admin', 'super-admin'],
-    default: 'user',
-  },
-  accountType: {
-    type: String,
-    enum: ['professional', 'employer'],
-    default: 'professional',
-    required: function () {
-      return this.role === 'user';
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Please tell us your name!'],
     },
-  },
-  password: {
-    type: String,
-    required: [true, 'Please provide a password'],
-    minlength: 8,
-    select: false,
-  },
-  // passwordConfirm: {
-  //   type: String,
-  //   required: [true, 'Please confirm your password'],
-  //   validate: {
-  //     // This only works on CREATE and SAVE!!!
-  //     validator: function (el) {
-  //       return el === this.password;
-  //     },
-  //     message: 'Passwords are not the same!',
-  //   },
-  // },
-  passwordChangedAt: Date,
-  passwordResetToken: String,
-  passwordResetExpires: Date,
-  skills: [
-    {
-      name: {
-        type: String,
-        required: true,
-        trim: true,
-      },
-      level: {
-        type: String,
-        enum: ['beginner', 'intermediate', 'advanced'],
-        required: true,
+    email: {
+      type: String,
+      required: [true, 'Please provide your email'],
+      unique: true,
+      lowercase: true,
+      validate: [validator.isEmail, 'Please provide a valid email'],
+    },
+    //   photo: String,
+    role: {
+      type: String,
+      enum: ['user', 'admin', 'super-admin'],
+      default: 'user',
+    },
+    accountType: {
+      type: String,
+      enum: ['professional', 'employer'],
+      default: 'professional',
+      required: function () {
+        return this.role === 'user';
       },
     },
-  ],
-  links: [
-    {
-      name: {
-        type: String,
-        required: true,
-      },
-      url: {
-        type: String,
-        required: true,
-      },
+    password: {
+      type: String,
+      required: [true, 'Please provide a password'],
+      minlength: 8,
+      select: false,
     },
-  ],
-  inviteToken: String,
-  inviteExpires: Date,
-  isInvited: {
-    type: Boolean,
-    default: false,
-  },
-  emailVerificationToken: String,
-  emailVerificationExpires: Date,
-  emailVerified: {
-    type: Boolean,
-    default: false,
-  },
+    // passwordConfirm: {
+    //   type: String,
+    //   required: [true, 'Please confirm your password'],
+    //   validate: {
+    //     // This only works on CREATE and SAVE!!!
+    //     validator: function (el) {
+    //       return el === this.password;
+    //     },
+    //     message: 'Passwords are not the same!',
+    //   },
+    // },
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+    skills: [
+      {
+        name: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        level: {
+          type: String,
+          enum: ['beginner', 'intermediate', 'advanced'],
+          required: true,
+        },
+      },
+    ],
+    links: [
+      {
+        name: {
+          type: String,
+          required: true,
+        },
+        url: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+    inviteToken: String,
+    inviteExpires: Date,
+    isInvited: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: String,
+    emailVerificationExpires: Date,
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
 
-  active: {
-    type: Boolean,
-    default: true,
-    select: false,
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
+    },
   },
-});
+  { timestamps: true }
+);
 
 userSchema.pre('save', async function () {
   // Only run this function if password was actually modified

@@ -35,11 +35,10 @@ const jobCategorySchema = new mongoose.Schema(
 );
 
 // Auto-generate slug
-jobCategorySchema.pre('save', function (next) {
+jobCategorySchema.pre('save', function () {
   if (this.isModified('name')) {
     this.slug = slugify(this.name, { lower: true });
   }
-  next();
 });
 
 const JobCategory = mongoose.model('JobCategory', jobCategorySchema);

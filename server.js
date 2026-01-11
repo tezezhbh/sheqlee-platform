@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const Subscription = require('./models/subscriptionModel');
 
 dotenv.config({ path: './config.env' });
 const app = require('./app');
@@ -10,6 +11,12 @@ const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
   process.env.DATABASE_PASSWORD
 );
+
+// mongoose.connection.once('open', async () => {
+//   await mongoose.connection.db.collection('subscriptions').dropIndexes();
+//   await Subscription.syncIndexes();
+//   console.log('Subscription indexes synced');
+// });
 
 mongoose
   .connect(DB)

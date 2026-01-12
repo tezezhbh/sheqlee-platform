@@ -144,8 +144,9 @@ exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
     }
 
     query.tags = { $in: tags.map((tag) => tag._id) };
+
+    console.log('Incoming tags:', req.query.tags);
   }
-  console.log('Incoming tags:', req.query.tags);
 
   // Pagination
   const page = Number(req.query.page) || 1;

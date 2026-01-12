@@ -10,7 +10,7 @@ const validateRequest = require('../myMiddlewares/validateRequest');
 const router = express.Router();
 
 router
-  .route('/me')
+  .route('/my-company')
   .get(authController.protect, companyController.getMyCompanyProfile)
   .patch(authController.protect, companyController.updateMyCompanyProfile);
 
@@ -36,8 +36,8 @@ router
     companyController.createCompany
   )
   .get(
-    authController.protect,
-    authController.authorizedTo('admin'),
+    // authController.protect,
+    // authController.authorizedTo('admin'),
     companyController.getAllCompanies
   );
 

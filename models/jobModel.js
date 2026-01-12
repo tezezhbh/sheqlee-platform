@@ -49,7 +49,10 @@ const jobPostSchema = new mongoose.Schema(
     },
     requirements: {
       type: String,
-      required: true,
+      required: [true, 'Please the rquirements for this Job!'],
+    },
+    skills: {
+      type: String,
     },
     salary: {
       min: Number,

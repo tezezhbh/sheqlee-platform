@@ -139,9 +139,22 @@ exports.getMyCompanyProfile = catchAsync(async (req, res, next) => {
 });
 
 exports.updateMyCompanyProfile = catchAsync(async (req, res, next) => {
+  const allowedFields = [
+    'name',
+    'domain',
+    'description',
+    'companySize',
+    'location',
+  ];
+
+  const filteredBody = {};
+  allowedFields.forEach((el) => {
+    if (req.body[el] !== undefined) filteredBody[el] = req.body[el];
+  });
+
   const updatedCompany = await Company.findOneAndUpdate(
     { owner: req.user._id },
-    req.body,
+    filteredBody,
     { new: true, runValidators: true }
   );
 

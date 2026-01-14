@@ -46,6 +46,14 @@ exports.signup = catchAsync(async (req, res, next) => {
   });
 
   console.log(newUser);
+
+  /*
+  // Create Freelancer model automatically
+  if (newUser.accountType === 'professional') {
+    await FreelancerProfile.create({ newUser: newUser._id });
+  }
+    */
+
   /*
   // if email verification is needed
   const verificationToken = createToken();

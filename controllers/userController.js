@@ -66,3 +66,33 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
     data: null,
   });
 });
+
+// Delete own profile
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  const { reason } = req.body;
+
+  if (!reason) {
+    return next(new AppError('Deletion reason is required', 400));
+  }
+
+  await User.findByIdAndUpdate(req.user._id, {
+    isActive: false,
+    deletedAt: Date.now(),
+    deleteReason: reason,
+  });
+
+  res.status(204).json({
+    status: 'success',
+  });
+});
+
+// Middleware to be implemented
+exports.protect = catchAsync(async (req, res, next) => {
+  // existing JWT logic...
+
+  if (!currentUser.isActive) {
+    return next(new AppError('Your account is deactivated', 401));
+  }
+
+  next();
+});

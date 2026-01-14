@@ -19,16 +19,31 @@ const companySchema = new mongoose.Schema(
     location: {
       type: String,
     },
-    logoUrl: {
+    logo: {
       type: String,
     },
     companySize: {
-      type: Number,
+      type: String,
+      enum: ['less than 10', '10–50', '50–200', '200+'],
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+    },
+    // admins: [
+    //   {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'User',
+    //   },
+    // ],
+    isPublic: {
+      type: Boolean,
+      default: true,
+    },
+    verified: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

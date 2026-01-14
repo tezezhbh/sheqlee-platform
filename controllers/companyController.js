@@ -168,3 +168,8 @@ exports.updateMyCompanyProfile = catchAsync(async (req, res, next) => {
     data: updatedCompany,
   });
 });
+
+// DELETE COMPANY???????
+// deletedAt: Date,
+// deleteReason: String,
+// isActive: {type: boolean, default: true}

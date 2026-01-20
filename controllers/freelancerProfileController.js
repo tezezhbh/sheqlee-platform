@@ -57,41 +57,40 @@ exports.toggleVisibility = catchAsync(async (req, res, next) => {
 
 // Get all freelancers by Admin
 exports.getAllFreelancers = catchAsync(async (req, res, next) => {
-  const freelancers = await User.aggregate([
-    {
-      $match: {
-        accountType: 'professional',
-      },
-    },
+  const freelancers = await FreelancerProfile.aggregate([
+    // 1. Join with User to get Name and Email
     {
       $lookup: {
-        from: 'freelancerprofiles',
-        localField: '_id',
-        foreignField: 'user',
-        as: 'profile',
+        from: 'users', // Collection name for User model
+        localField: 'user',
+        foreignField: '_id',
+        as: 'userInfo',
       },
     },
-    {
-      $unwind: {
-        path: '$profile',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
+    { $unwind: '$userInfo' },
+
+    // 3. Final Shape for your Dashboard Table
     {
       $project: {
-        name: 1,
-        email: 1,
+        _id: '$user', // Use User ID as the main ID
+        profileId: '$_id',
+        name: '$userInfo.name',
+        email: '$userInfo.email',
+        title: 1,
+        regDate: '$userInfo.createdAt',
+        status: '$userInfo.status',
         createdAt: 1,
-        active: 1,
-        title: '$profile.title',
       },
     },
+    { $sort: { name: 1 } },
   ]);
 
   res.status(200).json({
     status: 'success',
     results: freelancers.length,
-    data: freelancers,
+    data: {
+      freelancers,
+    },
   });
 });
 

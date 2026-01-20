@@ -62,15 +62,26 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-
-    active: {
-      type: Boolean,
-      default: true,
-      select: false,
+    status: {
+      type: String,
+      enum: ['active', 'inactive', 'deleted'],
+      default: 'active',
     },
+    // isActive: {
+    //   type: Boolean,
+    //   default: true,
+    //   select: false,
+    // },
   },
-  { timestamps: true }
+  { timestamps: true, toObject: { virtuals: true }, toJSON: { virtuals: true } }
 );
+
+userSchema.virtual('profile', {
+  ref: 'FreelancerProfile',
+  localField: '_id',
+  foreignField: 'user',
+  justOne: true,
+});
 
 userSchema.pre('save', async function () {
   // Only run this function if password was actually modified

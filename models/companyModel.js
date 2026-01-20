@@ -45,6 +45,13 @@ const companySchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    deletedAt: String,
+    deleteReason: String,
+    status: {
+      type: String,
+      enum: ['active', 'inactive', 'deleted'],
+      default: 'active',
+    },
   },
   { timestamps: true }
 );

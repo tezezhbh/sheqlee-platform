@@ -84,12 +84,102 @@ exports.createCompany = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllCompanies = catchAsync(async (req, res, next) => {
-  const companies = await Company.find()
-    .populate('owner', 'name email')
-    .sort({ createdAt: -1 });
+  const companies = await Company.aggregate([
+    // Lookup the Owner (Replacing the old .populate('owner'))
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'owner',
+        foreignField: '_id',
+        as: 'ownerInfo',
+      },
+    },
+
+    {
+      $lookup: {
+        from: 'jobposts',
+        localField: '_id',
+        foreignField: 'company',
+        as: 'jobs',
+      },
+    },
+
+    {
+      $lookup: {
+        from: 'follows',
+        let: { companyId: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$target', '$$companyId'] },
+                  { $eq: ['$targetType', 'Company'] },
+                ],
+              },
+            },
+          },
+          { $count: 'count' },
+        ],
+        as: 'follows',
+      },
+    },
+
+    {
+      $lookup: {
+        from: 'subscriptions',
+        let: { companyId: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$target', '$$companyId'] },
+                  { $eq: ['$targetType', 'Company'] },
+                  { $eq: ['$isActive', true] },
+                ],
+              },
+            },
+          },
+          { $count: 'count' },
+        ],
+        as: 'emailSubs',
+      },
+    },
+
+    // Final Shape for the Dashboard Table
+    {
+      $project: {
+        name: 1,
+        email: 1,
+        status: 1,
+        createdAt: 1,
+        companyId: 1,
+        // Get the first owner from the array created by lookup
+        owner: { $arrayElemAt: ['$ownerInfo', 0] },
+        jobsCount: {
+          $size: {
+            $filter: {
+              input: '$jobs',
+              as: 'job',
+              cond: { $eq: ['$$job.isPublished', true] },
+            },
+          },
+        },
+        subsCount: {
+          $add: [
+            { $ifNull: [{ $arrayElemAt: ['$follows.count', 0] }, 0] },
+            { $ifNull: [{ $arrayElemAt: ['$emailSubs.count', 0] }, 0] },
+          ],
+        },
+      },
+    },
+
+    { $sort: { createdAt: -1 } },
+  ]);
 
   res.status(200).json({
-    success: true,
+    status: 'success',
     results: companies.length,
     data: {
       companies,
@@ -98,10 +188,9 @@ exports.getAllCompanies = catchAsync(async (req, res, next) => {
 });
 
 exports.getCompany = catchAsync(async (req, res, next) => {
-  const company = await Company.findById(req.params.companyId).populate(
-    'owner',
-    'name email'
-  );
+  const company = await Company.findById(req.params.companyId)
+    // .populate('')
+    .populate('owner', 'name email');
 
   if (!company) {
     return res.status(404).json({

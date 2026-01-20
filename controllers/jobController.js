@@ -46,6 +46,7 @@ exports.createJob = catchAsync(async (req, res, next) => {
     category,
     requirements,
     salary,
+    shortDescription,
   } = req.body;
 
   await checkCompanyOwnership(company, req.user._id);
@@ -86,6 +87,7 @@ exports.createJob = catchAsync(async (req, res, next) => {
     category,
     requirements,
     salary,
+    shortDescription,
   });
 
   res.status(201).json({
@@ -100,7 +102,7 @@ exports.createJob = catchAsync(async (req, res, next) => {
 exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
   const query = {
     isPublished: true,
-    isActive: true,
+    // isActive: true,
   };
 
   // Keyword search
@@ -158,7 +160,8 @@ exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
   const jobs = await JobPost.find(query)
     .populate('company', 'name domain')
     .populate('tags', 'name slug')
-    // .populate('category', 'name slug')
+    .populate('category', 'name slug')
+    .populate('applicantsCount')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
@@ -176,11 +179,25 @@ exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
 exports.getOneJob = catchAsync(async (req, res, next) => {
   const job = await JobPost.findOne({
     _id: req.params.jobId,
-    isActive: true,
+    // isActive: true,
     isPublished: true,
   })
     .populate('company', 'name domain')
-    .populate('tags', 'name slug');
+    .populate('tags', 'name slug')
+    .populate({
+      path: 'applicants',
+      select: 'createdAt', // Fields from JobApplication
+      populate: {
+        path: 'applicant',
+        select: 'name email', // Fields from User model
+        // This is the "Deep Populate" to get the Freelancer Title
+        populate: {
+          path: 'profile', // Assuming your User model has a virtual called 'profile'
+          model: 'FreelancerProfile',
+          select: 'title', // Only grab the title (e.g., "Full-Stack Developer")
+        },
+      },
+    });
 
   if (!job) {
     return next(new AppError('Job not found', 404));
@@ -349,11 +366,11 @@ exports.deleteJob = catchAsync(async (req, res, next) => {
   const { jobId } = req.params;
 
   const job = await getJobOrFail(req.params.jobId);
-  await checkCompanyOwnership(job.company, req.user._id);
+  // await checkCompanyOwnership(job.company, req.user._id);
 
   job.isActive = false;
   job.isPublished = false;
-  await job.save();
+  await job.save({ validateBeforeSave: false });
 
   res.status(200).json({
     status: 'success',

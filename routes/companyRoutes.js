@@ -4,6 +4,8 @@ const authController = require('../controllers/authController');
 const jobController = require('../controllers/jobController');
 const { createCompanyValidator } = require('../validators/comRegValidator');
 const validateRequest = require('../myMiddlewares/validateRequest');
+const handlerFactory = require('./../controllers/handlerFactory');
+const Company = require('../models/companyModel');
 
 // const auth = require('../middlewares/auth');
 
@@ -40,5 +42,19 @@ router
     // authController.authorizedTo('admin'),
     companyController.getAllCompanies
   );
+
+router.patch(
+  '/:id/toggle',
+  // authController.protect,
+  // authController.authorizedTo('admin'),
+  handlerFactory.toggleStatus(Company)
+);
+
+router.delete(
+  '/:id',
+  // authController.protect,
+  // authController.authorizedTo('admin'),
+  handlerFactory.deleteOne(Company)
+);
 
 module.exports = router;

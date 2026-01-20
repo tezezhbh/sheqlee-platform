@@ -51,6 +51,10 @@ const jobPostSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please the rquirements for this Job!'],
     },
+    howToApply: String,
+    applyLink: {
+      type: String,
+    },
     skills: {
       type: String,
     },
@@ -79,13 +83,26 @@ const jobPostSchema = new mongoose.Schema(
       default: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true, toObject: { virtuals: true }, toJSON: { virtuals: true } }
 );
 
 jobPostSchema.index({ company: 1, title: 1, isActive: 1 }, { unique: true });
 jobPostSchema.index({
   title: 'text',
   description: 'text',
+});
+
+jobPostSchema.virtual('applicantsCount', {
+  ref: 'JobApplication', // The model to use
+  localField: '_id', // Find applications where 'job'
+  foreignField: 'job', // matches this job's '_id'
+  count: true, // Only return the number, not the full array
+});
+
+jobPostSchema.virtual('applicants', {
+  ref: 'JobApplication',
+  localField: '_id',
+  foreignField: 'job',
 });
 
 const JobPost = mongoose.model('JobPost', jobPostSchema);

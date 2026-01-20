@@ -9,17 +9,20 @@ const tagSchema = new mongoose.Schema(
       trim: true,
       unique: true,
     },
-
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'JobCategory',
+      required: [true, 'A tag must belong to a category.'],
+    },
     slug: {
       type: String,
       unique: true,
     },
-
+    description: String,
     isActive: {
       type: Boolean,
       default: true,
     },
-
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

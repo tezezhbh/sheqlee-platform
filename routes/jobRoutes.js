@@ -1,16 +1,17 @@
 const express = require('express');
-
 const authController = require('../controllers/authController');
 // const auth = require('../middlewares/auth');
 const jobController = require('../controllers/jobController');
 const jobApplicationController = require('../controllers/jobApplicationController');
 const { createJobValidator } = require('../validators/jobValidator');
 const validateRequest = require('../myMiddlewares/validateRequest');
+const handlerFactory = require('./../controllers/handlerFactory');
+const JobPost = require('../models/jobModel');
 
 const router = express.Router();
 
 router.get(
-  '/company/:companyId/my',
+  '/JobPost/:companyId/my',
   authController.protect,
   jobController.getMyCompanyJobs
 );
@@ -33,7 +34,11 @@ router
   .route('/:jobId')
   .patch(authController.protect, jobController.updateJob)
   // Delete (deactivate) job
-  .delete(authController.protect, jobController.deleteJob)
+  .delete(
+    authController.protect,
+    authController.authorizedTo('admin'),
+    jobController.deleteJob
+  )
   .get(jobController.getOneJob);
 
 router
@@ -57,5 +62,8 @@ router.get(
   // authController.restrictedToAccountType('employer'),
   jobApplicationController.getJobApplications
 );
+
+router.patch('/:id/toggle', handlerFactory.toggleActive(JobPost));
+// router.patch('/:id/deactivate', handlerFactory.deactivate(JobPost));
 
 module.exports = router;

@@ -8,18 +8,15 @@ const freelancerProfileSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-
     title: {
       type: String,
       trim: true,
       maxlength: 100,
     },
-
     bio: {
       type: String,
       maxlength: 256,
     },
-
     skills: [
       {
         name: {
@@ -34,7 +31,6 @@ const freelancerProfileSchema = new mongoose.Schema(
         },
       },
     ],
-
     links: [
       {
         name: {
@@ -47,17 +43,14 @@ const freelancerProfileSchema = new mongoose.Schema(
         },
       },
     ],
-
     cv: String,
     avatar: String,
-
     isPublic: {
       type: Boolean,
       default: true,
     },
   },
   {
-    timestamps: true,
     toJSON: {
       transform: (doc, ret) => {
         delete ret.__v;

@@ -24,6 +24,13 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Sheqlee API is running 🚀',
+  });
+});
+
 // ROUTES
 // app.use(router);
 app.use('/api/v1/users', userRouter);

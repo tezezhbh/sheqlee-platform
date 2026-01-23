@@ -99,6 +99,7 @@ exports.getAllPublicTags = catchAsync(async (req, res, next) => {
     {
       $project: {
         name: 1,
+        description: 1,
         createdAt: 1,
         isActive: 1,
         // Using $ifNull and $arrayElemAt handles tags with 0 counts perfectly

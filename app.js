@@ -17,6 +17,7 @@ const notificationRouter = require('./routes/notificationRoutes');
 const subscriptionRouter = require('./routes/subscriptionRoutes');
 const followRouter = require('./routes/followRoutes');
 const freelancerProfileRouter = require('./routes/freelancerProfileRoutes');
+const feedbackRouter = require('./routes/feedbackRoutes');
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/api/v1/notifications', notificationRouter);
 app.use('/api/v1/subscriptions', subscriptionRouter);
 app.use('/api/v1/follows', followRouter);
 app.use('/api/v1/freelancer-profile', freelancerProfileRouter);
+app.use('/api/v1/feedbacks', feedbackRouter);
 
 // 404 handler (optional)
 app.use((req, res, next) => {

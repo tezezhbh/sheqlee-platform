@@ -153,6 +153,7 @@ exports.getAllCompanies = catchAsync(async (req, res, next) => {
         name: 1,
         email: 1,
         status: 1,
+        description: 1,
         createdAt: 1,
         companyId: 1,
         // Get the first owner from the array created by lookup
@@ -201,7 +202,9 @@ exports.getCompany = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    data: company,
+    data: {
+      company,
+    },
   });
 });
 

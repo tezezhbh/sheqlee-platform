@@ -164,6 +164,7 @@ exports.getAllCategories = catchAsync(async (req, res, next) => {
         _id: 1,
         name: 1,
         slug: 1,
+        description: 1,
         isActive: 1,
         createdAt: 1,
         // NEW: Just count the array already stored in the document

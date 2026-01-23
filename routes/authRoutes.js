@@ -10,7 +10,7 @@ router.post(
   '/signup',
   registerationValidator.signupValidator,
   validateRequest,
-  authController.signup
+  authController.signup,
 );
 router.post('/login', authController.login);
 router.post('/forgot-password', authController.forgotPassword);
@@ -21,16 +21,17 @@ router.patch('/verify-email/:token', authController.verifyEmail);
 router.patch(
   '/updateMyPassword',
   authController.protect,
-  authController.updatePassword
+  authController.updatePassword,
 );
 
-router.get('/logout', authController.protect, authController.logout);
+// router.get('/logout', authController.protect, authController.logout);
+router.get('/logout', authController.logout);
 
 router.post(
   '/company-register',
   registerationValidator.companyRegisterValidator,
   validateRequest,
-  companyController.companyRegister
+  companyController.companyRegister,
 );
 
 module.exports = router;

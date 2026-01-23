@@ -17,7 +17,7 @@ const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
   const cookieOptions = {
     expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
     ),
     httpOnly: true,
   };
@@ -123,9 +123,9 @@ exports.protect = catchAsync(async (req, res, next) => {
     token = req.cookies.jwt;
   }
 
-  if (!token) {
+  if (!token || token === 'loggedout') {
     return next(
-      new AppError('You are not logged in! Please log in to get access.', 401)
+      new AppError('You are not logged in! Please log in to get access.', 401),
     );
   }
 
@@ -138,15 +138,15 @@ exports.protect = catchAsync(async (req, res, next) => {
     return next(
       new AppError(
         'The user belonging to this token does no longer exist.',
-        401
-      )
+        401,
+      ),
     );
   }
 
   // 4) Check if user changed password after the token was issued
   if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
-      new AppError('User recently changed password! Please log in again.', 401)
+      new AppError('User recently changed password! Please log in again.', 401),
     );
   }
 
@@ -160,7 +160,7 @@ exports.authorizedTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return next(
-        new AppError('You do not have permission to perform this action', 403)
+        new AppError('You do not have permission to perform this action', 403),
       );
     }
 
@@ -192,7 +192,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   // 3) Create reset URL
   const resetURL = `${req.protocol}://${req.get(
-    'host'
+    'host',
   )}/api/v1/auth/reset-password/${resetToken}`;
 
   // 4) Send email
@@ -219,7 +219,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
     return next(
       new AppError('There was an error sending the email. Try again later!'),
-      500
+      500,
     );
   }
 });

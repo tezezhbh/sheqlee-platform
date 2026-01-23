@@ -11,15 +11,15 @@ router
   .post(
     authController.protect,
     authController.authorizedTo('admin'),
-    tagController.createTag
+    tagController.createTag,
   )
   .get(tagController.getAllPublicTags);
 
 router.patch(
   '/:tagId',
   authController.protect,
-  authController.authorizedTo('admin'),
-  tagController.updateTag
+  // authController.authorizedTo('admin'),
+  tagController.updateTag,
 );
 
 // router.patch(
@@ -33,14 +33,14 @@ router.patch(
   '/:id/toggle',
   // authController.protect,
   // authController.authorizedTo('admin'),
-  handlerFactory.toggleActive(Tag)
+  handlerFactory.toggleActive(Tag),
 );
 
 router.delete(
   '/:id',
   // authController.protect,
   // authController.authorizedTo('admin'),
-  handlerFactory.deleteOne(Tag)
+  handlerFactory.deleteOne(Tag),
 );
 
 module.exports = router;

@@ -9,7 +9,12 @@ const jobCategorySchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
-
+    tags: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tag',
+      },
+    ],
     slug: {
       type: String,
       unique: true,
@@ -31,7 +36,7 @@ const jobCategorySchema = new mongoose.Schema(
       required: [true, 'A Category must have a creater'],
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Auto-generate slug

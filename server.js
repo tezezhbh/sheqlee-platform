@@ -9,7 +9,7 @@ const L_DB = process.env.LOCAL_DATABASE;
 
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
-  process.env.DATABASE_PASSWORD
+  process.env.DATABASE_PASSWORD,
 );
 
 // mongoose.connection.once('open', async () => {
@@ -25,5 +25,5 @@ mongoose
 const port = process.env.PORT || 3000;
 
 const server = app.listen(port, () =>
-  console.log(`Server is listening on ${port}`)
+  console.log(`Server is listening on ${port}`),
 );

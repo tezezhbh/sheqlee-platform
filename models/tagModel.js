@@ -9,11 +9,13 @@ const tagSchema = new mongoose.Schema(
       trim: true,
       unique: true,
     },
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'JobCategory',
-      required: [true, 'A tag must belong to a category.'],
-    },
+    categories: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'JobCategory',
+        required: [true, 'A tag must belong to a category.'],
+      },
+    ],
     slug: {
       type: String,
       unique: true,
@@ -29,7 +31,7 @@ const tagSchema = new mongoose.Schema(
       required: [true, 'You must tell us who created the tag.'],
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 tagSchema.pre('save', function () {

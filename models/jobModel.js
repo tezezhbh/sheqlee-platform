@@ -72,18 +72,23 @@ const jobPostSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['draft', 'published', 'closed'],
+      enum: ['draft', 'published'],
+      default: 'draft',
     },
-    isPublished: {
+    // isPublished: {
+    //   type: Boolean,
+    //   default: false,
+    // },
+    isActive: {
       type: Boolean,
       default: false,
     },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
   },
-  { timestamps: true, toObject: { virtuals: true }, toJSON: { virtuals: true } }
+  {
+    timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+  },
 );
 
 jobPostSchema.index({ company: 1, title: 1, isActive: 1 }, { unique: true });

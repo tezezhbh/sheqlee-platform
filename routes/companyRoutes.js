@@ -6,6 +6,7 @@ const { createCompanyValidator } = require('../validators/comRegValidator');
 const validateRequest = require('../myMiddlewares/validateRequest');
 const handlerFactory = require('./../controllers/handlerFactory');
 const Company = require('../models/companyModel');
+const JobPost = require('../models/jobModel');
 
 // const auth = require('../middlewares/auth');
 
@@ -20,13 +21,13 @@ router.get(
   '/:companyId',
   authController.protect,
   authController.authorizedTo('admin'),
-  companyController.getCompany
+  companyController.getCompany,
 );
 router.get(
   '/:companyId/jobs/stats',
   authController.protect,
   authController.restrictedToAccountType('employer'),
-  jobController.getCompanyJobStats
+  jobController.getCompanyJobStats,
 );
 
 router
@@ -35,26 +36,44 @@ router
     authController.protect,
     createCompanyValidator,
     validateRequest,
-    companyController.createCompany
+    companyController.createCompany,
   )
   .get(
     // authController.protect,
     // authController.authorizedTo('admin'),
-    companyController.getAllCompanies
+    companyController.getAllCompanies,
   );
 
 router.patch(
   '/:id/toggle',
   // authController.protect,
   // authController.authorizedTo('admin'),
-  handlerFactory.toggleStatus(Company)
+  handlerFactory.toggleStatus(Company),
 );
 
 router.delete(
   '/:id',
   // authController.protect,
   // authController.authorizedTo('admin'),
-  handlerFactory.deleteOne(Company)
+  handlerFactory.deleteOne(Company),
 );
+
+// Company dashboard (owner monipulating Job)
+router.get(
+  '/jobs/:companyId/my',
+  authController.protect,
+  jobController.getMyCompanyJobs,
+);
+router.post(
+  '/:id/duplicate',
+  authController.protect,
+  jobController.duplicateJob,
+);
+router.patch(
+  '/:id/toggle-owner',
+  authController.protect,
+  jobController.companyOwnerToggleActive,
+);
+router.delete('/:id/delete', authController.protect, jobController.deleteJob);
 
 module.exports = router;

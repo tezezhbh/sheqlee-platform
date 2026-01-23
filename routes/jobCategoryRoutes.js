@@ -10,11 +10,12 @@ const router = express.Router();
 router.get('/', jobCategoryController.getAllCategories);
 router.get('/:slug', jobCategoryController.getCategoryBySlug);
 
+router.post('/', authController.protect, jobCategoryController.createCategory);
 // Protected routes
 router.use(authController.protect, authController.authorizedTo('admin'));
 
 // later will add authorzedTo('admin')
-router.post('/', jobCategoryController.createCategory);
+// router.post('/', jobCategoryController.createCategory);
 router.patch('/:categoryId', jobCategoryController.updateCategory);
 // router.patch('/:categoryId/toggle', jobCategoryController.toggleCategoryStatus);
 
@@ -22,14 +23,14 @@ router.patch(
   '/:id/toggle',
   //   authController.protect,
   //   authController.authorizedTo('admin'),
-  handlerFactory.toggleActive(JobCategory)
+  handlerFactory.toggleActive(JobCategory),
 );
 
 router.delete(
   '/:id',
   //   authController.protect,
   //   authController.authorizedTo('admin'),
-  handlerFactory.deleteOne(JobCategory)
+  handlerFactory.deleteOne(JobCategory),
 );
 
 module.exports = router;

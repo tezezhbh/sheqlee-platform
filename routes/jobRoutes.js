@@ -10,22 +10,22 @@ const JobPost = require('../models/jobModel');
 
 const router = express.Router();
 
-router.get(
-  '/JobPost/:companyId/my',
-  authController.protect,
-  jobController.getMyCompanyJobs
-);
+// router.get(
+//   '/JobPost/:companyId/my',
+//   authController.protect,
+//   jobController.getMyCompanyJobs
+// );
 
 router.patch(
   '/:jobId/publish',
   authController.protect,
-  jobController.publishJob
+  jobController.publishJob,
 );
 
 router.patch(
   '/:jobId/unpublish',
   authController.protect,
-  jobController.unpublishJob
+  jobController.unpublishJob,
 );
 
 router.get('/company/:companyId', jobController.getCompanyJobs);
@@ -37,7 +37,7 @@ router
   .delete(
     authController.protect,
     authController.authorizedTo('admin'),
-    jobController.deleteJob
+    jobController.deleteJob,
   )
   .get(jobController.getOneJob);
 
@@ -47,20 +47,20 @@ router
     authController.protect,
     createJobValidator,
     validateRequest,
-    jobController.createJob
+    jobController.createJob,
   )
   .get(jobController.getAllPublishedJobs);
 
 router.post(
   '/:jobId/apply',
   authController.protect,
-  jobApplicationController.applyToJob
+  jobApplicationController.applyToJob,
 );
 router.get(
   '/:jobId/applications',
   authController.protect,
   // authController.restrictedToAccountType('employer'),
-  jobApplicationController.getJobApplications
+  jobApplicationController.getJobApplications,
 );
 
 router.patch('/:id/toggle', handlerFactory.toggleActive(JobPost));

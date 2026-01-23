@@ -55,6 +55,7 @@ const userSchema = new mongoose.Schema(
     isInvited: {
       type: Boolean,
       default: false,
+      select: false,
     },
     emailVerificationToken: String,
     emailVerificationExpires: Date,
@@ -73,7 +74,11 @@ const userSchema = new mongoose.Schema(
     //   select: false,
     // },
   },
-  { timestamps: true, toObject: { virtuals: true }, toJSON: { virtuals: true } }
+  {
+    timestamps: true,
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
+  },
 );
 
 userSchema.virtual('profile', {
@@ -98,7 +103,7 @@ userSchema.pre('save', async function () {
 //some methods
 userSchema.methods.correctPassword = async function (
   candidatePassword,
-  userPassword
+  userPassword,
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
@@ -107,7 +112,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimestamp = parseInt(
       this.passwordChangedAt.getTime() / 1000,
-      10
+      10,
     );
 
     return JWTTimestamp < changedTimestamp;
@@ -119,7 +124,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 
 userSchema.methods.comparePasswordForLogin = async function (
   candidatePassword,
-  userPassword
+  userPassword,
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };

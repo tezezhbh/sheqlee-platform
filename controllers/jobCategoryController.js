@@ -1,4 +1,5 @@
 const JobCategory = require('../models/jobCategoryModel');
+const Tag = require('./../models/tagModel');
 const AppError = require('../utilities/globalAppError');
 const catchAsync = require('../utilities/catchAsync');
 
@@ -11,17 +12,26 @@ const getCategoryOrFail = async (categoryId) => {
 };
 
 exports.createCategory = catchAsync(async (req, res, next) => {
-  const { name, description } = req.body;
+  const { name, description, tags } = req.body;
 
+  // 1. Create the Category
   const category = await JobCategory.create({
     name,
     description,
+    tags: tags || [], // Save the tags selected in the dropdown
     createdBy: req.user._id,
   });
 
+  // 2. BI-DIRECTIONAL SYNC: Update the Tag documents
+  if (tags && tags.length > 0) {
+    await Tag.updateMany(
+      { _id: { $in: tags } },
+      { $addToSet: { categories: category._id } }, // Add this Category to the Tag's list
+    );
+  }
+
   res.status(201).json({
     status: 'success',
-    message: 'Category created successfully',
     data: {
       category,
     },
@@ -30,24 +40,43 @@ exports.createCategory = catchAsync(async (req, res, next) => {
 
 exports.updateCategory = catchAsync(async (req, res, next) => {
   const { categoryId } = req.params;
-
   const category = await getCategoryOrFail(categoryId);
 
-  const allowedFields = ['name', 'description', 'isActive'];
+  // Store the original tags to calculate what was removed
+  const oldTags = category.tags.map((id) => id.toString());
 
+  // 1. Update basic fields
+  const allowedFields = ['name', 'description', 'isActive', 'tags'];
   allowedFields.forEach((field) => {
     if (req.body[field] !== undefined) {
       category[field] = req.body[field];
     }
   });
 
-  await category.save();
+  const updatedCategory = await category.save({ validateBeforeSave: false });
+
+  // 2. SYNC LOGIC: If the tags array was modified
+  if (req.body.tags) {
+    const newTags = req.body.tags.map((id) => id.toString());
+
+    // A. Remove Category ID from tags that were deselected
+    const removedTags = oldTags.filter((id) => !newTags.includes(id));
+    await Tag.updateMany(
+      { _id: { $in: removedTags } },
+      { $pull: { categories: updatedCategory._id } },
+    );
+
+    // B. Add Category ID to newly selected tags
+    await Tag.updateMany(
+      { _id: { $in: newTags } },
+      { $addToSet: { categories: updatedCategory._id } },
+    );
+  }
 
   res.status(200).json({
     status: 'success',
-    message: 'Category updated successfully',
     data: {
-      category,
+      category: updatedCategory,
     },
   });
 });
@@ -74,17 +103,7 @@ exports.toggleCategoryStatus = catchAsync(async (req, res, next) => {
 
 exports.getAllCategories = catchAsync(async (req, res, next) => {
   const categories = await JobCategory.aggregate([
-    // Lookup Tags linked to this Category
-    {
-      $lookup: {
-        from: 'tags',
-        localField: '_id',
-        foreignField: 'category',
-        as: 'tags',
-      },
-    },
-
-    // Lookup Jobs linked to this Category
+    // 1. Lookup Jobs linked to this Category
     {
       $lookup: {
         from: 'jobposts',
@@ -94,7 +113,7 @@ exports.getAllCategories = catchAsync(async (req, res, next) => {
       },
     },
 
-    // Lookup Registered Followers (Follows)
+    // 2. Lookup Registered Followers
     {
       $lookup: {
         from: 'follows',
@@ -116,7 +135,7 @@ exports.getAllCategories = catchAsync(async (req, res, next) => {
       },
     },
 
-    // Lookup Email Subscriptions
+    // 3. Lookup Email Subscriptions
     {
       $lookup: {
         from: 'subscriptions',
@@ -139,7 +158,7 @@ exports.getAllCategories = catchAsync(async (req, res, next) => {
       },
     },
 
-    // Project and Calculate Final Counts
+    // 4. Project and Calculate Final Counts
     {
       $project: {
         _id: 1,
@@ -147,21 +166,20 @@ exports.getAllCategories = catchAsync(async (req, res, next) => {
         slug: 1,
         isActive: 1,
         createdAt: 1,
-        // Count the tags array
-        tagsCount: { $size: '$tags' },
+        // NEW: Just count the array already stored in the document
+        tagsCount: { $size: { $ifNull: ['$tags', []] } },
 
-        // Count only jobs that are actually active/published
+        // UPDATED: Count jobs where status is 'published'
         jobsCount: {
           $size: {
             $filter: {
               input: '$jobs',
               as: 'job',
-              cond: { $eq: ['$$job.isPublished', true] },
+              cond: { $eq: ['$$job.status', 'published'] },
             },
           },
         },
 
-        // Sum of registered follows + email subscriptions
         subscribersCount: {
           $add: [
             { $ifNull: [{ $arrayElemAt: ['$follows.count', 0] }, 0] },
@@ -171,16 +189,13 @@ exports.getAllCategories = catchAsync(async (req, res, next) => {
       },
     },
 
-    // Default Sort (Newest first)
     { $sort: { createdAt: -1 } },
   ]);
 
   res.status(200).json({
     status: 'success',
     results: categories.length,
-    data: {
-      categories,
-    },
+    data: { categories },
   });
 });
 

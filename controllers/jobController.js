@@ -54,13 +54,17 @@ exports.createJob = catchAsync(async (req, res, next) => {
   const existingJob = await JobPost.findOne({
     company,
     title,
+    status: 'published',
     isActive: true,
   });
 
   // preventing duplicate Job Post
   if (existingJob) {
     return next(
-      new AppError('A job with this title already exists for this company', 400)
+      new AppError(
+        'A job with this title already exists for this company',
+        400,
+      ),
     );
   }
 
@@ -101,7 +105,7 @@ exports.createJob = catchAsync(async (req, res, next) => {
 
 exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
   const query = {
-    isPublished: true,
+    status: 'published',
     // isActive: true,
   };
 
@@ -129,7 +133,7 @@ exports.getAllPublishedJobs = catchAsync(async (req, res, next) => {
     const rawTags = req.query.tags.split(',').map((t) => t.trim());
 
     const objectIds = rawTags.filter((id) =>
-      mongoose.Types.ObjectId.isValid(id)
+      mongoose.Types.ObjectId.isValid(id),
     );
 
     const slugs = rawTags
@@ -180,7 +184,7 @@ exports.getOneJob = catchAsync(async (req, res, next) => {
   const job = await JobPost.findOne({
     _id: req.params.jobId,
     // isActive: true,
-    isPublished: true,
+    status: 'published',
   })
     .populate('company', 'name domain')
     .populate('tags', 'name slug')
@@ -229,10 +233,15 @@ exports.getCompanyJobStats = catchAsync(async (req, res, next) => {
         _id: null,
         total: { $sum: 1 },
         published: {
-          $sum: { $cond: ['$isPublished', 1, 0] },
+          $sum: { $cond: [{ $eq: ['$status', 'published'] }, 1, 0] },
         },
         active: {
-          $sum: { $cond: ['$isActive', 1, 0] },
+          $sum: { $cond: [{ $eq: ['$isActive', true] }, 1, 0] },
+        },
+        drafts: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'draft'] }, 1, 0],
+          },
         },
       },
     },
@@ -242,6 +251,7 @@ exports.getCompanyJobStats = catchAsync(async (req, res, next) => {
     total: 0,
     published: 0,
     active: 0,
+    drafts: 0,
   };
 
   delete result._id;
@@ -257,8 +267,8 @@ exports.getCompanyJobs = catchAsync(async (req, res, next) => {
 
   const jobs = await JobPost.find({
     company: companyId,
-    isPublished: true,
-    isActive: true,
+    // status: 'published',
+    // isActive: true,
   })
     .populate('company', 'name domain')
     .sort({ createdAt: -1 });
@@ -281,7 +291,7 @@ exports.getMyCompanyJobs = catchAsync(async (req, res, next) => {
   // 3) Get jobs
   const jobs = await JobPost.find({
     company: companyId,
-    isActive: true,
+    // isActive: true,
   }).sort({ createdAt: -1 });
 
   res.status(200).json({
@@ -300,7 +310,8 @@ exports.publishJob = catchAsync(async (req, res, next) => {
   await checkCompanyOwnership(job.company, req.user._id);
 
   // 4) Publish
-  job.isPublished = true;
+  job.status = 'published';
+  job.isActive = true;
   await job.save();
 
   res.status(200).json({
@@ -318,7 +329,7 @@ exports.unpublishJob = catchAsync(async (req, res, next) => {
   const job = await getJobOrFail(req.params.jobId);
   await checkCompanyOwnership(job.company, req.user._id);
 
-  job.isPublished = false;
+  job.status = 'draft';
   await job.save();
 
   res.status(200).json({
@@ -362,18 +373,71 @@ exports.updateJob = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.deleteJob = catchAsync(async (req, res, next) => {
-  const { jobId } = req.params;
+// used in the company router
+exports.companyOwnerToggleActive = catchAsync(async (req, res, next) => {
+  const job = await getJobOrFail(req.params.id);
 
-  const job = await getJobOrFail(req.params.jobId);
-  // await checkCompanyOwnership(job.company, req.user._id);
+  // Ownership check
+  await checkCompanyOwnership(job.company, req.user._id);
 
-  job.isActive = false;
-  job.isPublished = false;
+  // Prevent activating a draft that isn't published yet
+  if (job.status === 'draft') {
+    return next(
+      new AppError(
+        'Drafts cannot be toggled active. Please publish first.',
+        400,
+      ),
+    );
+  }
+
+  job.isActive = !job.isActive;
   await job.save({ validateBeforeSave: false });
 
   res.status(200).json({
     status: 'success',
-    message: 'Job deleted successfully',
+    data: {
+      active: job.isActive,
+    },
+  });
+});
+
+// DUPLICATE JOB
+exports.duplicateJob = catchAsync(async (req, res, next) => {
+  // Use .lean() for a plain JS object to make cloning easy
+  const originalJob = await JobPost.findById(req.params.id).lean();
+  if (!originalJob) return next(new AppError('Original job not found', 404));
+
+  // Ownership Check
+  await checkCompanyOwnership(originalJob.company, req.user._id);
+
+  // Clean the object for duplication
+  const { _id, id, createdAt, updatedAt, ...jobData } = originalJob;
+
+  const duplicatedJob = await JobPost.create({
+    ...jobData,
+    title: `${jobData.title} (Copy)`,
+    status: 'draft',
+    isActive: false,
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: { job: duplicatedJob },
+  });
+});
+
+// DELETE JOB (Permanent Database Removal)
+exports.deleteJob = catchAsync(async (req, res, next) => {
+  const job = await getJobOrFail(req.params.id);
+
+  // Ownership Check
+  await checkCompanyOwnership(job.company, req.user._id);
+
+  // Permanent deletion from database
+  await JobPost.findByIdAndDelete(req.params.id);
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
   });
 });

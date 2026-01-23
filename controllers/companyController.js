@@ -9,7 +9,7 @@ exports.companyRegister = catchAsync(async (req, res, next) => {
 
   if (!company || !representative) {
     return next(
-      new AppError('Company and representative information are required', 400)
+      new AppError('Company and representative information are required', 400),
     );
   }
 
@@ -18,8 +18,8 @@ exports.companyRegister = catchAsync(async (req, res, next) => {
     return next(
       new AppError(
         'Email already in use please login useing your email for more inf0.',
-        409
-      )
+        409,
+      ),
     );
   }
 
@@ -162,7 +162,7 @@ exports.getAllCompanies = catchAsync(async (req, res, next) => {
             $filter: {
               input: '$jobs',
               as: 'job',
-              cond: { $eq: ['$$job.isPublished', true] },
+              cond: { $eq: ['$$job.status', 'published'] },
             },
           },
         },
@@ -244,7 +244,7 @@ exports.updateMyCompanyProfile = catchAsync(async (req, res, next) => {
   const updatedCompany = await Company.findOneAndUpdate(
     { owner: req.user._id },
     filteredBody,
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 
   if (!updatedCompany) {

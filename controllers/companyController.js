@@ -71,6 +71,9 @@ exports.createCompany = catchAsync(async (req, res, next) => {
   const company = await Company.create({
     name,
     domain,
+    location,
+    companySize,
+    logo,
     owner: req.user._id,
   });
 
@@ -157,13 +160,14 @@ exports.getAllCompanies = catchAsync(async (req, res, next) => {
         description: 1,
         createdAt: 1,
         companyId: 1,
+        location: 1,
+        companySize: 1,
         // Get the first owner from the array created by lookup
         owner: {
           _id: { $arrayElemAt: ['$ownerInfo._id', 0] },
           name: { $arrayElemAt: ['$ownerInfo.name', 0] },
           email: { $arrayElemAt: ['$ownerInfo.email', 0] },
           status: { $arrayElemAt: ['$ownerInfo.status', 0] },
-          createdAt: { $arrayElemAt: ['$ownerInfo.createdAt', 0] },
           accountType: { $arrayElemAt: ['$ownerInfo.accountType', 0] },
         },
         jobsCount: {

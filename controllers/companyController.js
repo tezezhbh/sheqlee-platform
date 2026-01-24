@@ -151,13 +151,21 @@ exports.getAllCompanies = catchAsync(async (req, res, next) => {
     {
       $project: {
         name: 1,
+        domain: 1,
         email: 1,
         status: 1,
         description: 1,
         createdAt: 1,
         companyId: 1,
         // Get the first owner from the array created by lookup
-        owner: { $arrayElemAt: ['$ownerInfo', 0] },
+        owner: {
+          _id: { $arrayElemAt: ['$ownerInfo._id', 0] },
+          name: { $arrayElemAt: ['$ownerInfo.name', 0] },
+          email: { $arrayElemAt: ['$ownerInfo.email', 0] },
+          status: { $arrayElemAt: ['$ownerInfo.status', 0] },
+          createdAt: { $arrayElemAt: ['$ownerInfo.createdAt', 0] },
+          accountType: { $arrayElemAt: ['$ownerInfo.accountType', 0] },
+        },
         jobsCount: {
           $size: {
             $filter: {

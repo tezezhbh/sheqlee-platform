@@ -91,7 +91,7 @@ exports.hardDeleteFeedback = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.toggleFeedback = catchAsync(async (req, res) => {
+exports.toggleFeedback = catchAsync(async (req, res, next) => {
   const feedback = await Feedback.findById(req.params.id);
 
   if (!feedback) return next(new AppError('Feedback not found', 404));

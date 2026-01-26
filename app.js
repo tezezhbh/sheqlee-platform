@@ -19,6 +19,7 @@ const followRouter = require('./routes/followRoutes');
 const freelancerProfileRouter = require('./routes/freelancerProfileRoutes');
 const feedbackRouter = require('./routes/feedbackRoutes');
 const faqRouter = require('./routes/faqRoutes');
+const staticPageRouter = require('./routes/staticPageRoutes');
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.use('/api/v1/follows', followRouter);
 app.use('/api/v1/freelancer-profile', freelancerProfileRouter);
 app.use('/api/v1/feedbacks', feedbackRouter);
 app.use('/api/v1/faqs', faqRouter);
+app.use('/api/v1/static-pages', staticPageRouter);
 
 // 404 handler (optional)
 app.use((req, res, next) => {

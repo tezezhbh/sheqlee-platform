@@ -22,6 +22,7 @@ const faqRouter = require('./routes/faqRoutes');
 const staticPageRouter = require('./routes/staticPageRoutes');
 const testimonialRouter = require('./routes/testimonialRoutes');
 const heroRouter = require('./routes/heroRoutes');
+const footerRouter = require('./routes/footerRoutes');
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use('/api/v1/faqs', faqRouter);
 app.use('/api/v1/static-pages', staticPageRouter);
 app.use('/api/v1/testimonials', testimonialRouter);
 app.use('/api/v1/heroes', heroRouter);
+app.use('/api/v1/footers', footerRouter);
 
 // 404 handler (optional)
 app.use((req, res, next) => {

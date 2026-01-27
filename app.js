@@ -21,6 +21,7 @@ const feedbackRouter = require('./routes/feedbackRoutes');
 const faqRouter = require('./routes/faqRoutes');
 const staticPageRouter = require('./routes/staticPageRoutes');
 const testimonialRouter = require('./routes/testimonialRoutes');
+const heroRouter = require('./routes/heroRoutes');
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use('/api/v1/feedbacks', feedbackRouter);
 app.use('/api/v1/faqs', faqRouter);
 app.use('/api/v1/static-pages', staticPageRouter);
 app.use('/api/v1/testimonials', testimonialRouter);
+app.use('/api/v1/heroes', heroRouter);
 
 // 404 handler (optional)
 app.use((req, res, next) => {

@@ -65,7 +65,6 @@ const companySchema = new mongoose.Schema(
 companySchema.pre('save', function () {
   if (!this.isModified('name')) return;
   this.slug = slugify(this.name, { lower: true });
-  next();
 });
 
 const Company = mongoose.model('Company', companySchema);

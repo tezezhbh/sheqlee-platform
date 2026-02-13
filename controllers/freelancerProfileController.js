@@ -2,13 +2,52 @@ const FreelancerProfile = require('../models/freelancerProfileModel');
 const User = require('../models/userModel');
 const catchAsync = require('../utilities/catchAsync');
 const AppError = require('../utilities/globalAppError');
+const { uploadFileToCloudinary } = require('../utilities/cloudinaryFileUpload');
+const cloudinary = require('../config/cloudinary');
+
+exports.updateCV = catchAsync(async (req, res, next) => {
+  if (!req.file) {
+    return next(new AppError('Please upload your CV', 400));
+  }
+
+  const profile = await FreelancerProfile.findOne({ user: req.user._id });
+
+  if (!profile) {
+    return next(new AppError('Freelancer profile not found', 404));
+  }
+
+  // Remove old CV if exists
+  if (profile.cv?.publicId) {
+    await cloudinary.uploader.destroy(profile.cv.publicId, {
+      resource_type: 'raw',
+    });
+  }
+
+  const result = await uploadFileToCloudinary({
+    buffer: req.file.buffer,
+    folder: 'freelancers/cv',
+    publicId: `cv-${req.user._id}`,
+  });
+
+  profile.cv = {
+    url: result.secure_url,
+    publicId: result.public_id,
+  };
+
+  await profile.save();
+
+  res.status(200).json({
+    status: 'success',
+    data: profile,
+  });
+});
 
 exports.upsertProfile = catchAsync(async (req, res, next) => {
   const userId = req.user._id;
 
   if (req.user.accountType !== 'professional') {
     return next(
-      new AppError('Only professional users can create profiles', 403)
+      new AppError('Only professional users can create profiles', 403),
     );
   }
 
@@ -25,7 +64,7 @@ exports.upsertProfile = catchAsync(async (req, res, next) => {
       new: true,
       upsert: true, // create if not exists
       runValidators: true,
-    }
+    },
   );
 
   res.status(200).json({
@@ -117,7 +156,7 @@ exports.addSkill = catchAsync(async (req, res, next) => {
     {
       $push: { skills: { name: normalizedName, level } },
     },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 
   // 3. If profile is null, it means either profile doesn't exist OR skill is a duplicate
@@ -146,7 +185,7 @@ exports.removeSkill = catchAsync(async (req, res, next) => {
   const profile = await FreelancerProfile.findOneAndUpdate(
     { user: userId },
     { $pull: { skills: { name: normalizedName } } },
-    { new: true }
+    { new: true },
   );
 
   if (!profile) {
@@ -188,7 +227,7 @@ exports.addLink = catchAsync(async (req, res, next) => {
     {
       new: true,
       runValidators: true,
-    }
+    },
   );
 
   if (!profile) {
@@ -216,7 +255,7 @@ exports.removeLink = catchAsync(async (req, res, next) => {
   const profile = await FreelancerProfile.findOneAndUpdate(
     { user: userId },
     { $pull: { links: { name: normalizedName } } },
-    { new: true }
+    { new: true },
   );
 
   if (!profile) {

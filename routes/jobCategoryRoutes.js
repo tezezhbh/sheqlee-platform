@@ -3,6 +3,7 @@ const jobCategoryController = require('../controllers/jobCategoryController');
 const authController = require('../controllers/authController');
 const handlerFactory = require('./../controllers/handlerFactory');
 const JobCategory = require('../models/jobCategoryModel');
+const multer = require('./../utilities/multer');
 
 const router = express.Router();
 
@@ -10,27 +11,20 @@ const router = express.Router();
 router.get('/', jobCategoryController.getAllCategories);
 router.get('/:slug', jobCategoryController.getCategoryBySlug);
 
-router.post('/', authController.protect, jobCategoryController.createCategory);
 // Protected routes
 router.use(authController.protect, authController.authorizedTo('admin'));
-
-// later will add authorzedTo('admin')
-// router.post('/', jobCategoryController.createCategory);
-router.patch('/:categoryId', jobCategoryController.updateCategory);
-// router.patch('/:categoryId/toggle', jobCategoryController.toggleCategoryStatus);
-
-router.patch(
-  '/:id/toggle',
-  //   authController.protect,
-  //   authController.authorizedTo('admin'),
-  handlerFactory.toggleActive(JobCategory),
+router.post(
+  '/',
+  multer.uploadImage.single('icon'),
+  jobCategoryController.createCategory,
 );
-
-router.delete(
-  '/:id',
-  //   authController.protect,
-  //   authController.authorizedTo('admin'),
-  handlerFactory.deleteOne(JobCategory),
+router.delete('/:id', handlerFactory.deleteOne(JobCategory));
+router.patch('/:categoryId', jobCategoryController.updateCategory);
+router.patch('/:id/toggle', handlerFactory.toggleActive(JobCategory));
+router.patch(
+  '/:id/icon',
+  multer.uploadImage.single('icon'),
+  jobCategoryController.updateCategoryIcon,
 );
 
 module.exports = router;

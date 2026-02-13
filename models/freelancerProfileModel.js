@@ -43,8 +43,10 @@ const freelancerProfileSchema = new mongoose.Schema(
         },
       },
     ],
-    cv: String,
-    avatar: String,
+    cv: {
+      url: String,
+      publicId: String,
+    },
     isPublic: {
       type: Boolean,
       default: true,
@@ -57,12 +59,12 @@ const freelancerProfileSchema = new mongoose.Schema(
         return ret;
       },
     },
-  }
+  },
 );
 
 const FreelancerProfile = mongoose.model(
   'FreelancerProfile',
-  freelancerProfileSchema
+  freelancerProfileSchema,
 );
 
 module.exports = FreelancerProfile;

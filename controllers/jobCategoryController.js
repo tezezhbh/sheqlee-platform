@@ -2,6 +2,42 @@ const JobCategory = require('../models/jobCategoryModel');
 const Tag = require('./../models/tagModel');
 const AppError = require('../utilities/globalAppError');
 const catchAsync = require('../utilities/catchAsync');
+const { uploadToCloudinary } = require('./../utilities/cloudinaryUpload');
+const cloudinary = require('./../config/cloudinary');
+
+exports.updateCategoryIcon = catchAsync(async (req, res, next) => {
+  const category = await JobCategory.findById(req.params.id);
+
+  if (!category) {
+    return next(new AppError('Category not found', 404));
+  }
+
+  if (!req.file) {
+    return next(new AppError('Please upload an icon', 400));
+  }
+
+  // Remove old icon
+  if (category.icon?.publicId) {
+    await cloudinary.uploader.destroy(category.icon.publicId);
+  }
+
+  const result = await uploadToCloudinary({
+    buffer: req.file.buffer,
+    folder: 'categories/icons',
+    publicId: `category-${category._id}`,
+  });
+
+  category.icon = {
+    url: result.secure_url,
+    publicId: result.public_id,
+  };
+  await category.save();
+
+  res.status(200).json({
+    status: 'success',
+    data: category,
+  });
+});
 
 const getCategoryOrFail = async (categoryId) => {
   const category = await JobCategory.findById(categoryId);
@@ -14,12 +50,22 @@ const getCategoryOrFail = async (categoryId) => {
 exports.createCategory = catchAsync(async (req, res, next) => {
   const { name, description, tags } = req.body;
 
+  const result = await uploadToCloudinary({
+    buffer: req.file.buffer,
+    folder: 'categories/icons',
+    publicId: `category-${Date.now()}`,
+  });
+
   // 1. Create the Category
   const category = await JobCategory.create({
     name,
     description,
     tags: tags || [], // Save the tags selected in the dropdown
     createdBy: req.user._id,
+    icon: {
+      url: result.secure_url,
+      publicId: result.public_id,
+    },
   });
 
   // 2. BI-DIRECTIONAL SYNC: Update the Tag documents

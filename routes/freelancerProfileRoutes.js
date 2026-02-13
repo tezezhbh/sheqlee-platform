@@ -3,6 +3,7 @@ const freelancerProfileController = require('../controllers/freelancerProfileCon
 const authController = require('../controllers/authController');
 const handlerFactory = require('./../controllers/handlerFactory');
 const User = require('../models/userModel');
+const multer = require('../utilities/multer');
 
 const router = express.Router();
 
@@ -15,35 +16,42 @@ router
   .patch(freelancerProfileController.upsertProfile)
   .get(
     authController.authorizedTo('admin'),
-    freelancerProfileController.getAllFreelancers
+    freelancerProfileController.getAllFreelancers,
   );
 
 router.patch(
-  '/profile-visibility',
-  freelancerProfileController.toggleVisibility
+  '/me/cv',
+  authController.restrictedToAccountType('professional'),
+  multer.uploadCV.single('cv'),
+  freelancerProfileController.updateCV,
 );
 
-router.use(authController.restrictedToAccountType('professional'));
-
-router.post('/skills', freelancerProfileController.addSkill);
-// router.patch('/skills/:skillId', freelancerProfileController.updateSkill);
-router.delete('/skills', freelancerProfileController.removeSkill);
-
-router.post('/links', freelancerProfileController.addLink);
-router.delete('/links', freelancerProfileController.removeLink);
+router.patch(
+  '/profile-visibility',
+  freelancerProfileController.toggleVisibility,
+);
 
 router.patch(
   '/:id/toggle',
-  // authController.protect,
-  // authController.authorizedTo('admin'),
-  handlerFactory.toggleStatus(User)
+  authController.authorizedTo('admin'),
+  handlerFactory.toggleStatus(User),
 );
 
 router.delete(
   '/:id',
-  // authController.protect,
-  // authController.authorizedTo('admin'),
-  handlerFactory.deleteOne(User)
+  authController.authorizedTo('admin'),
+  handlerFactory.deleteOne(User),
 );
+
+router.use(authController.restrictedToAccountType('professional'));
+router
+  .route('/skills')
+  .post(freelancerProfileController.addSkill)
+  .delete(freelancerProfileController.removeSkill);
+
+router
+  .route('/links')
+  .post(freelancerProfileController.addLink)
+  .delete(freelancerProfileController.removeLink);
 
 module.exports = router;

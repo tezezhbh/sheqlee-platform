@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 const companySchema = new mongoose.Schema(
   {
@@ -6,6 +7,10 @@ const companySchema = new mongoose.Schema(
       type: String,
       required: [true, 'A company must have a name!'],
       trim: true,
+    },
+    slug: {
+      type: String,
+      lowercase: true,
     },
     domain: {
       type: String,
@@ -20,7 +25,8 @@ const companySchema = new mongoose.Schema(
       type: String,
     },
     logo: {
-      type: String,
+      url: String,
+      publicId: String,
     },
     companySize: {
       type: String,
@@ -55,6 +61,12 @@ const companySchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+companySchema.pre('save', function () {
+  if (!this.isModified('name')) return;
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
 
 const Company = mongoose.model('Company', companySchema);
 

@@ -3,44 +3,22 @@ const authController = require('./../controllers/authController');
 const tagController = require('./../controllers/tagController');
 const handlerFactory = require('./../controllers/handlerFactory');
 const Tag = require('../models/tagModel');
+const multer = require('./../utilities/multer');
 
 const router = express.Router();
 
-router
-  .route('/')
-  .post(
-    authController.protect,
-    authController.authorizedTo('admin'),
-    tagController.createTag,
-  )
-  .get(tagController.getAllPublicTags);
+router.get('/', tagController.getAllPublicTags);
 
+router.use(authController.protect, authController.authorizedTo('admin'));
+router.post('/', multer.uploadImage.single('icon'), tagController.createTag);
+router.patch('/:tagId', tagController.updateTag);
+router.patch('/:id/toggle', handlerFactory.toggleActive(Tag));
 router.patch(
-  '/:tagId',
-  authController.protect,
-  // authController.authorizedTo('admin'),
-  tagController.updateTag,
+  '/:id/icon',
+  multer.uploadImage.single('icon'),
+  tagController.updateTagIcon,
 );
 
-// router.patch(
-//   '/:tagId/toggle',
-//   authController.protect,
-//   authController.authorizedTo('admin'),
-//   tagController.toggleTag
-// );
-
-router.patch(
-  '/:id/toggle',
-  // authController.protect,
-  // authController.authorizedTo('admin'),
-  handlerFactory.toggleActive(Tag),
-);
-
-router.delete(
-  '/:id',
-  // authController.protect,
-  // authController.authorizedTo('admin'),
-  handlerFactory.deleteOne(Tag),
-);
+router.delete('/:id', handlerFactory.deleteOne(Tag));
 
 module.exports = router;

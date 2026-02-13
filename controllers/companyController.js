@@ -3,6 +3,51 @@ const User = require('./../models/userModel');
 const Company = require('./../models/companyModel');
 const catchAsync = require('./../utilities/catchAsync');
 const AppError = require('./../utilities/globalAppError');
+const { uploadToCloudinary } = require('./../utilities/cloudinaryUpload');
+const cloudinary = require('./../config/cloudinary');
+
+exports.updateCompanyLogo = catchAsync(async (req, res, next) => {
+  if (!req.file) {
+    return next(new AppError('Please upload a logo image', 400));
+  }
+
+  const company = await Company.findById(req.params.companyId);
+
+  if (!company) {
+    return next(new AppError('Company not found', 404));
+  }
+
+  // Permission check
+  if (!company.owner.equals(req.user._id)) {
+    return next(new AppError('Not authorized', 403));
+  }
+
+  // Remove old logo
+  if (company.logo?.publicId) {
+    await cloudinary.uploader.destroy(company.logo.publicId);
+  }
+
+  // Upload new logo
+  const result = await uploadToCloudinary({
+    buffer: req.file.buffer,
+    folder: 'companies/logos',
+    publicId: `company-${company._id}`,
+  });
+
+  company.logo = {
+    url: result.secure_url,
+    publicId: result.public_id,
+  };
+
+  await company.save();
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      photo: company.logo,
+    },
+  });
+});
 
 exports.companyRegister = catchAsync(async (req, res, next) => {
   const { company, representative } = req.body;
@@ -201,19 +246,17 @@ exports.getAllCompanies = catchAsync(async (req, res, next) => {
 });
 
 exports.getCompany = catchAsync(async (req, res, next) => {
-  const company = await Company.findById(req.params.companyId)
-    // .populate('')
-    .populate('owner', 'name email');
+  const company = await Company.findById(req.params.companyId).populate(
+    'owner',
+    'name email',
+  );
 
   if (!company) {
-    return res.status(404).json({
-      success: false,
-      message: 'Company not found',
-    });
+    return next(new AppError('Company not found', 404));
   }
 
   res.status(200).json({
-    success: true,
+    status: 'success',
     data: {
       company,
     },
@@ -221,21 +264,16 @@ exports.getCompany = catchAsync(async (req, res, next) => {
 });
 
 exports.getMyCompanyProfile = catchAsync(async (req, res, next) => {
-  const company = await Company.find({
+  const company = await Company.findOne({
     owner: req.user._id,
-  });
+  }).populate('owner', 'name email');
 
-  // only for one findOne()
-  // if (!company) {
-  //   return next(new AppError('Conpamy not found!', 404));
-  // }
-  if (company.length === 0) {
-    return next(new AppError('No companies found for this user', 404));
+  if (!company) {
+    return next(new AppError('Company not found!', 404));
   }
 
   res.status(200).json({
     status: 'success',
-    results: company.length,
     data: {
       company,
     },
@@ -273,7 +311,29 @@ exports.updateMyCompanyProfile = catchAsync(async (req, res, next) => {
   });
 });
 
-// DELETE COMPANY???????
-// deletedAt: Date,
-// deleteReason: String,
-// isActive: {type: boolean, default: true}
+exports.deleteCompany = catchAsync(async (req, res, next) => {
+  const { reason } = req.body;
+  if (!reason) {
+    return next(new AppError('Deletion reason is required', 400));
+  }
+
+  const company = await Company.findById(req.params.companyId);
+
+  if (!company) {
+    return next(new AppError('Company not found', 404));
+  }
+
+  // Ownership check
+  if (!company.owner.equals(req.user._id)) {
+    return next(new AppError('You are Not authorized', 403));
+  }
+
+  company.status = 'deleted';
+  company.deletedAt = Date.now();
+  company.deleteReason = reason;
+  await company.save();
+
+  res.status(204).json({
+    status: 'success',
+  });
+});

@@ -16,7 +16,11 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       validate: [validator.isEmail, 'Please provide a valid email'],
     },
-    //   photo: String,
+    phone: String,
+    photo: {
+      url: String,
+      publicId: String,
+    },
     role: {
       type: String,
       enum: ['user', 'admin', 'super-admin'],
@@ -67,6 +71,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['active', 'inactive', 'deleted'],
       default: 'active',
+    },
+    deletedAt: {
+      type: Date,
+    },
+    deleteReason: {
+      type: String,
+      trim: true,
     },
     // isActive: {
     //   type: Boolean,

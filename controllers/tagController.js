@@ -2,14 +2,61 @@ const Tag = require('./../models/tagModel');
 const JobCategory = require('../models/jobCategoryModel');
 const catchAsync = require('./../utilities/catchAsync');
 const AppError = require('./../utilities/globalAppError');
+const { uploadToCloudinary } = require('./../utilities/cloudinaryUpload');
+const cloudinary = require('./../config/cloudinary');
+
+exports.updateTagIcon = catchAsync(async (req, res, next) => {
+  const tag = await Tag.findById(req.params.id);
+
+  if (!tag) {
+    return next(new AppError('Tag not found', 404));
+  }
+
+  if (!req.file) {
+    return next(new AppError('Please upload an icon', 400));
+  }
+
+  // Remove old icon
+  if (tag.icon?.publicId) {
+    await cloudinary.uploader.destroy(tag.icon.publicId);
+  }
+
+  const result = await uploadToCloudinary({
+    buffer: req.file.buffer,
+    folder: 'tags/icons',
+    publicId: `tag-${tag._id}`,
+  });
+
+  tag.icon = {
+    url: result.secure_url,
+    publicId: result.public_id,
+  };
+
+  await tag.save();
+
+  res.status(200).json({
+    status: 'success',
+    data: tag,
+  });
+});
 
 exports.createTag = catchAsync(async (req, res, next) => {
+  const result = await uploadToCloudinary({
+    buffer: req.file.buffer,
+    folder: 'tags/icons',
+    publicId: `tag-${Date.now()}`,
+  });
+
   // 1. Create the Tag with the categories array from the body
   const tag = await Tag.create({
     name: req.body.name,
     description: req.body.description,
     categories: req.body.categories, // Array of IDs from the dropdown
     createdBy: req.user._id,
+    icon: {
+      url: result.secure_url,
+      publicId: result.public_id,
+    },
   });
 
   // 2. BI-DIRECTIONAL SYNC: Update all selected categories

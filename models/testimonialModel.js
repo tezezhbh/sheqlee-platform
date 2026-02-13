@@ -8,7 +8,8 @@ const testimonialSchema = new mongoose.Schema(
       trim: true,
     },
     logo: {
-      type: String, // URL or file path
+      url: String,
+      publicId: String,
     },
     testimony: {
       type: String,

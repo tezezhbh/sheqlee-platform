@@ -7,6 +7,7 @@ const validateRequest = require('../myMiddlewares/validateRequest');
 const handlerFactory = require('./../controllers/handlerFactory');
 const Company = require('../models/companyModel');
 const JobPost = require('../models/jobModel');
+const multer = require('./../utilities/multer');
 
 // const auth = require('../middlewares/auth');
 
@@ -14,15 +15,25 @@ const router = express.Router();
 
 router
   .route('/my-company')
-  .get(authController.protect, companyController.getMyCompanyProfile)
+  .get(
+    authController.protect,
+    authController.restrictedToAccountType('employer'),
+    companyController.getMyCompanyProfile,
+  )
   .patch(authController.protect, companyController.updateMyCompanyProfile);
 
-router.get(
-  '/:companyId',
+router
+  .route('/:companyId')
+  .get(companyController.getCompany)
+  .delete(authController.protect, companyController.deleteCompany);
+
+router.patch(
+  '/:companyId/logo',
   authController.protect,
-  authController.authorizedTo('admin'),
-  companyController.getCompany,
+  multer.uploadImage.single('logo'),
+  companyController.updateCompanyLogo,
 );
+
 router.get(
   '/:companyId/jobs/stats',
   authController.protect,

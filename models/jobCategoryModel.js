@@ -19,7 +19,10 @@ const jobCategorySchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
-
+    icon: {
+      url: String,
+      publicId: String,
+    },
     description: {
       type: String,
       trim: true,

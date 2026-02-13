@@ -20,6 +20,10 @@ const tagSchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    icon: {
+      url: String,
+      publicId: String,
+    },
     description: String,
     isActive: {
       type: Boolean,

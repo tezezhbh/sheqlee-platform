@@ -1,47 +1,33 @@
 const express = require('express');
 const testimonialController = require('./../controllers/testimonialController');
 const authController = require('./../controllers/authController');
+const multer = require('./../utilities/multer');
 
 const router = express.Router();
 
 router.get('/public', testimonialController.getPublicTestimonials);
 
+router.use(authController.protect, authController.authorizedTo('admin'));
+
 router
   .route('/')
-  .get(
-    authController.protect,
-    authController.authorizedTo('admin'),
-    testimonialController.getAllTestimonials,
-  )
+  .get(testimonialController.getAllTestimonials)
   .post(
-    authController.protect,
-    authController.authorizedTo('admin'),
+    multer.uploadImage.single('logo'),
     testimonialController.createTestimonial,
   );
 
 router
   .route('/:id')
-  .get(
-    authController.protect,
-    authController.authorizedTo('admin'),
-    testimonialController.getTestimonial,
-  )
-  .patch(
-    authController.protect,
-    authController.authorizedTo('admin'),
-    testimonialController.updateTestimonial,
-  )
-  .delete(
-    authController.protect,
-    authController.authorizedTo('admin'),
-    testimonialController.deleteTestimonial,
-  );
+  .get(testimonialController.getTestimonial)
+  .patch(testimonialController.updateTestimonial)
+  .delete(testimonialController.deleteTestimonial);
 
 router.patch(
-  '/:id/toggle',
-  authController.protect,
-  authController.authorizedTo('admin'),
-  testimonialController.toggleTestimonialStatus,
+  '/:id/logo',
+  multer.uploadImage.single('logo'),
+  testimonialController.updateTestimonialLogo,
 );
+router.patch('/:id/toggle', testimonialController.toggleTestimonialStatus);
 
 module.exports = router;

@@ -77,23 +77,23 @@ const sendProdError = (err, req, res) => {
     });
   }
 
-  // // B) RENDERED WEBSITE
-  // // A) Operational, trusted error: send message to client
-  // if (err.isOperational) {
-  //   console.log(err);
-  //   return res.status(err.statusCode).render('error', {
-  //     title: 'Something went wrong!',
-  //     msg: err.message,
-  //   });
-  // }
-  // // B) Programming or other unknown error: don't leak error details
-  // // 1) Log error
-  // console.error('ERROR 💥', err);
-  // // 2) Send generic message
-  // return res.status(err.statusCode).render('error', {
-  //   title: 'Something went wrong!',
-  //   msg: 'Please try again later.',
-  // });
+  // B) RENDERED WEBSITE
+  // A) Operational, trusted error: send message to client
+  if (err.isOperational) {
+    console.log(err);
+    return res.status(err.statusCode).render('error', {
+      title: 'Something went wrong!',
+      msg: err.message,
+    });
+  }
+  // B) Programming or other unknown error: don't leak error details
+  // 1) Log error
+  console.error('ERROR 💥', err);
+  // 2) Send generic message
+  return res.status(err.statusCode).render('error', {
+    title: 'Something went wrong!',
+    msg: 'Please try again later.',
+  });
 
   // Just return JSON for productiontest
   if (err.isOperational) {
